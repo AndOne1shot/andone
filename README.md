@@ -1,6 +1,6 @@
 # andone
 
-A new Flutter project.
+To-do List 에 RPG 게임 요소를 추가한 안드로이드 어플리케이션
 
 ## Getting Started
 
