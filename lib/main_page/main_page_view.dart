@@ -141,23 +141,23 @@ class MainPageView extends ConsumerWidget {
                                           ),
                                         );
                                       },
-                                      leading: GestureDetector(
-                                        onTap: () {
-                                          // 체크박스 클릭 시 완료 처리(추후 수정 예정)
-                                          viewModel.toggleTodo(
-                                            todo.id,
-                                            todo.isCompleted,
-                                          );
-                                        },
-                                        child: Icon(
-                                          todo.isCompleted
-                                              ? Icons.check_box
-                                              : Icons.check_box_outline_blank,
-                                          color: todo.isCompleted
-                                              ? Colors.blue
-                                              : Colors.grey,
-                                        ),
-                                      ),
+                                      // leading: GestureDetector(
+                                      //   onTap: () {
+                                      //     // 체크박스 클릭 시 완료 처리(추후 수정 예정)
+                                      //     viewModel.toggleTodo(
+                                      //       todo.id,
+                                      //       todo.isCompleted,
+                                      //     );
+                                      //   },
+                                      //   child: Icon(
+                                      //     todo.isCompleted
+                                      //         ? Icons.check_box
+                                      //         : Icons.check_box_outline_blank,
+                                      //     color: todo.isCompleted
+                                      //         ? Colors.blue
+                                      //         : Colors.grey,
+                                      //   ),
+                                      // ),
                                       title: Text(
                                         todo.title,
                                         style: TextStyle(
@@ -168,6 +168,22 @@ class MainPageView extends ConsumerWidget {
                                               ? Colors.grey
                                               : Colors.black,
                                         ),
+                                      ),
+                                      trailing: IconButton(
+                                        icon: Icon(
+                                          todo.isCompleted
+                                              ? Icons.check_circle
+                                              : Icons.radio_button_unchecked,
+                                          color: todo.isCompleted
+                                              ? Colors.green
+                                              : Colors.grey,
+                                        ),
+                                        onPressed: () async {
+                                          viewModel.toggleTodo(
+                                            todo.id,
+                                            todo.isCompleted,
+                                          );
+                                        },
                                       ),
                                     ),
                                   );

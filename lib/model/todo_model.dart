@@ -8,6 +8,7 @@ class TodoModel {
   final DateTime startTime;
   final DateTime endTime;
   final bool isCompleted;
+  final int repeat;
 
   TodoModel({
     required this.id,
@@ -17,6 +18,7 @@ class TodoModel {
     required this.startTime,
     required this.endTime,
     required this.isCompleted,
+    required this.repeat,
   });
 
   factory TodoModel.fromFirestore(DocumentSnapshot doc) {
@@ -29,7 +31,8 @@ class TodoModel {
       // Firestore의 Timestamp를 Dart의 DateTime으로 변환
       startTime: (data['startTime'] as Timestamp).toDate(),
       endTime: (data['endTime'] as Timestamp).toDate(),
-      isCompleted: data['iscompleted'] ?? false,
+      isCompleted: data['isCompleted'] ?? false,
+      repeat: data['repeat'] ?? 0,
     );
   }
 }

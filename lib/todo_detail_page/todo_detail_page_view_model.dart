@@ -13,16 +13,17 @@ class TodoDetailViewModel {
     required String newContent,
     required int difficulty,
     required DateTime startTime,
-    required DateTime endTime, // 이제 이 값을 그대로 넣습니다.
-    // required DateTime endTime
+    required DateTime endTime,
+    required int repeat,
   }) async {
     try {
       await _db.collection('todos').doc(docId).update({
         'title': newTitle,
         'content': newContent,
         'difficulty': difficulty,
-        'startTime': startTime, // Firestore가 알아서 Timestamp로 변환합니다.
+        'startTime': startTime,
         'endTime': endTime,
+        'repeat': repeat,
         // 'endTime': endTime,
       });
       print("업데이트 성공!");

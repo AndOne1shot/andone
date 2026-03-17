@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:andone/todo_detail_page/difficulty_slider.dart';
 import 'package:andone/todo_detail_page/schedule_selector.dart';
+import 'package:andone/todo_detail_page/repeat_selector.dart';
 
 class TodoDetailPageView extends ConsumerStatefulWidget {
   final TodoModel todo;
@@ -19,9 +20,12 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
   late TextEditingController _contentController;
   late double _difficulty;
 
-  // 날짜 결과만 저장
+  // 날짜 변수
   late DateTime _startDateTime;
   late DateTime _endDateTime;
+
+  // 반복도 변수
+  late RepeatType _repeat;
 
   @override
   void initState() {
@@ -34,6 +38,8 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
 
     _startDateTime = widget.todo.startTime;
     _endDateTime = widget.todo.endTime;
+
+    _repeat = RepeatType.values[widget.todo.repeat ?? 0];
   }
 
   @override
@@ -90,21 +96,7 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                 floatingLabelBehavior: FloatingLabelBehavior.always,
               ),
             ),
-
             const SizedBox(height: 25),
-
-            // 일정 설정 (완전 분리)
-            ScheduleSelector(
-              initialStartTime: widget.todo.startTime,
-              initialEndTime: widget.todo.endTime,
-              onChanged: (start, end) {
-                _startDateTime = start;
-                _endDateTime = end;
-              },
-            ),
-
-            const SizedBox(height: 25),
-
             // 난이도 설정
             DifficultySlider(
               difficulty: _difficulty,
@@ -114,9 +106,26 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                 });
               },
             ),
-
+            // 일정 설정
+            ScheduleSelector(
+              initialStartTime: widget.todo.startTime,
+              initialEndTime: widget.todo.endTime,
+              onChanged: (start, end) {
+                _startDateTime = start;
+                _endDateTime = end;
+              },
+            ),
+            const SizedBox(height: 25),
+            // 반복도 설정
+            RepeatSelector(
+              value: _repeat,
+              onChanged: (value) {
+                setState(() {
+                  _repeat = value;
+                });
+              },
+            ),
             const Spacer(),
-
             // 하단 버튼 (삭제 / 저장)
             Row(
               children: [
@@ -124,7 +133,6 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                   child: ElevatedButton(
                     onPressed: () async {
                       await viewModel.deleteTodo(widget.todo.id);
-
                       if (context.mounted) {
                         Navigator.pop(context);
                       }
@@ -138,9 +146,7 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                     child: const Text('삭제'),
                   ),
                 ),
-
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
@@ -153,7 +159,6 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                         );
                         return;
                       }
-
                       await viewModel.updateTodo(
                         docId: widget.todo.id,
                         newTitle: _titleController.text,
@@ -161,8 +166,8 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                         difficulty: _difficulty.round(),
                         startTime: _startDateTime,
                         endTime: _endDateTime,
+                        repeat: _repeat.index,
                       );
-
                       if (context.mounted) {
                         Navigator.pop(context);
                       }
