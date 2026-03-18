@@ -31,6 +31,10 @@ class RepeatSelector extends StatelessWidget {
                 onChanged: (v) => onChanged(v!),
                 dense: true,
                 contentPadding: EdgeInsets.zero,
+                visualDensity: const VisualDensity(
+                  horizontal: -4,
+                  vertical: -4,
+                ),
               ),
             ),
             Expanded(
@@ -41,6 +45,10 @@ class RepeatSelector extends StatelessWidget {
                 onChanged: (v) => onChanged(v!),
                 dense: true,
                 contentPadding: EdgeInsets.zero,
+                visualDensity: const VisualDensity(
+                  horizontal: -4,
+                  vertical: -4,
+                ),
               ),
             ),
             Expanded(
@@ -51,6 +59,10 @@ class RepeatSelector extends StatelessWidget {
                 onChanged: (v) => onChanged(v!),
                 dense: true,
                 contentPadding: EdgeInsets.zero,
+                visualDensity: const VisualDensity(
+                  horizontal: -4,
+                  vertical: -4,
+                ),
               ),
             ),
           ],

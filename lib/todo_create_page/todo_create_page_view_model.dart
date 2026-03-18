@@ -1,0 +1,34 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// Provider
+final todoCreateViewModelProvider = Provider(
+  (ref) => TodoCreatePageViewModel(),
+);
+
+class TodoCreatePageViewModel {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  Future<void> createTodo({
+    required String title,
+    required String content,
+    required int difficulty,
+    required DateTime startTime,
+    required DateTime endTime,
+    required int repeat,
+  }) async {
+    try {
+      await _db.collection('todos').add({
+        'title': title,
+        'content': content,
+        'difficulty': difficulty,
+        'startTime': startTime,
+        'endTime': endTime,
+        'isCompleted': false,
+        'repeat': repeat,
+      });
+    } catch (e) {
+      print("Todo 생성 실패: $e");
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:andone/main_page/main_page_view_model.dart';
+import 'package:andone/todo_create_page/todo_create_page_view.dart';
 import 'package:andone/todo_detail_page/todo_detail_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,8 +15,46 @@ class MainPageView extends ConsumerWidget {
     // 2. 뷰모델 가져오기 (read) - 함수 호출용
     final viewModel = ref.read(mainPageViewModelProvider);
 
+    // 시작시간, 종료시간 hh:mm 형식으로 변환
+    String _formatTime(DateTime time) {
+      final hour = time.hour.toString().padLeft(2, '0');
+      final minute = time.minute.toString().padLeft(2, '0');
+      return "$hour:$minute";
+    }
+
+    // 시작시간까지 남은 시간 계산
+    String _getRemainingTime(DateTime startTime) {
+      final now = DateTime.now();
+      final diff = startTime.difference(now);
+
+      if (diff.isNegative) {
+        return "시작됨"; // 이미 시작
+      }
+
+      final hours = diff.inHours;
+      final minutes = diff.inMinutes % 60;
+
+      if (hours > 0) {
+        return "$hours시간 ${minutes}분 전";
+      } else {
+        return "$minutes분 전";
+      }
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A1A),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.add),
+        onPressed: () {
+          // TODO: 퀘스트 등록 페이지로 이동
+          print("퀘스트 추가 버튼 클릭");
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TodoCreatePageView()),
+          );
+        },
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -54,9 +93,7 @@ class MainPageView extends ConsumerWidget {
                       monsterAsync.when(
                         data: (monsters) {
                           if (monsters.isEmpty) return const Text("몬스터가 없습니다.");
-
                           final monster = monsters.first;
-
                           return Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -141,23 +178,7 @@ class MainPageView extends ConsumerWidget {
                                           ),
                                         );
                                       },
-                                      // leading: GestureDetector(
-                                      //   onTap: () {
-                                      //     // 체크박스 클릭 시 완료 처리(추후 수정 예정)
-                                      //     viewModel.toggleTodo(
-                                      //       todo.id,
-                                      //       todo.isCompleted,
-                                      //     );
-                                      //   },
-                                      //   child: Icon(
-                                      //     todo.isCompleted
-                                      //         ? Icons.check_box
-                                      //         : Icons.check_box_outline_blank,
-                                      //     color: todo.isCompleted
-                                      //         ? Colors.blue
-                                      //         : Colors.grey,
-                                      //   ),
-                                      // ),
+                                      // 제목
                                       title: Text(
                                         todo.title,
                                         style: TextStyle(
@@ -169,21 +190,58 @@ class MainPageView extends ConsumerWidget {
                                               : Colors.black,
                                         ),
                                       ),
-                                      trailing: IconButton(
-                                        icon: Icon(
-                                          todo.isCompleted
-                                              ? Icons.check_circle
-                                              : Icons.radio_button_unchecked,
-                                          color: todo.isCompleted
-                                              ? Colors.green
-                                              : Colors.grey,
+                                      // 시작시간 ~ 종료시간
+                                      subtitle: Text(
+                                        "${_formatTime(todo.startTime)} ~ ${_formatTime(todo.endTime)}",
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                          fontWeight: FontWeight.w600,
                                         ),
-                                        onPressed: () async {
-                                          viewModel.toggleTodo(
-                                            todo.id,
-                                            todo.isCompleted,
-                                          );
-                                        },
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // 남은 시간 표시
+                                              const Icon(
+                                                Icons.access_time,
+                                                size: 14,
+                                                color: Colors.grey,
+                                              ),
+                                              const SizedBox(width: 2),
+                                              Text(
+                                                _getRemainingTime(
+                                                  todo.startTime,
+                                                ),
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(width: 8),
+                                          // 완료 버튼
+                                          IconButton(
+                                            icon: Icon(
+                                              todo.isCompleted
+                                                  ? Icons.check_circle
+                                                  : Icons
+                                                        .radio_button_unchecked,
+                                              color: todo.isCompleted
+                                                  ? Colors.green
+                                                  : Colors.grey,
+                                            ),
+                                            onPressed: () async {
+                                              await viewModel.toggleTodo(
+                                                todo.id,
+                                                todo.isCompleted,
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   );
