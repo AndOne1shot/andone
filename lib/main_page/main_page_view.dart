@@ -77,6 +77,7 @@ class MainPageView extends ConsumerWidget {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          SizedBox(height: 30),
                           Image.asset(
                             "assets/image/character/test_character.png",
                             width: 80,
@@ -97,6 +98,36 @@ class MainPageView extends ConsumerWidget {
                           return Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              // 몬스터의 현재 체력 / 총 체력 text
+                              Text(
+                                '${monster.hp} / ${monster.maxHp}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+
+                              // 몬스터 체력바
+                              SizedBox(
+                                width: 80,
+                                child: Directionality(
+                                  textDirection: TextDirection.rtl,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: LinearProgressIndicator(
+                                      value: monster.hp / monster.maxHp,
+                                      minHeight: 6,
+                                      backgroundColor: Colors.grey[700],
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                            Colors.red,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                               Image.asset(
                                 // ID를 활용해 동적으로 경로 생성
                                 "assets/image/monster/monster_${monster.monsterId}.png",

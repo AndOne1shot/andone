@@ -132,7 +132,31 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('삭제 확인'),
+                            content: const Text('정말로 삭제하시겠습니까?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('취소'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('삭제'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      // 취소하거나 null이면 종료
+                      if (confirm != true) return;
+
                       await viewModel.deleteTodo(widget.todo.id);
+
                       if (context.mounted) {
                         Navigator.pop(context);
                       }
