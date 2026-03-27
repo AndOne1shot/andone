@@ -5,11 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // todo-list 불러옴
 final todoListProvider = StreamProvider<List<TodoModel>>((ref) {
-  final now = DateTime.now();
-
   return FirebaseFirestore.instance
       .collection('todos')
-      //.where('endTime', isGreaterThan: now)
+      .orderBy('startTime', descending: false) // 오름차순 정렬
       .snapshots()
       .map(
         (snapshot) =>
