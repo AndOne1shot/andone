@@ -1,3 +1,5 @@
+import 'package:andone/login_page/login_page_view.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'main_page/main_page_view.dart';
@@ -30,7 +32,15 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
       debugShowCheckedModeBanner: false,
-      home: const MainPageView(),
+      home: StreamBuilder(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.data != null) {
+            return const MainPageView();
+          }
+          return LoginPageView();
+        },
+      ),
     );
   }
 }

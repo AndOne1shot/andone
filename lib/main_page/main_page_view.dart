@@ -1,3 +1,4 @@
+import 'package:andone/login_page/login_page_view_model.dart';
 import 'package:andone/main_page/main_page_view_model.dart';
 import 'package:andone/todo_create_page/todo_create_page_view.dart';
 import 'package:andone/todo_detail_page/todo_detail_page_view.dart';
@@ -284,6 +285,23 @@ class MainPageView extends ConsumerWidget {
                         // 에러가 발생했을 때
                         error: (err, stack) =>
                             Center(child: Text("에러 발생: $err")),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // 🔥 로그아웃 버튼
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () async {
+                          await ref
+                              .read(loginPageViewModelProvider.notifier)
+                              .signOut();
+                        },
+                        child: const Text('로그아웃'),
                       ),
                     ),
                   ],
