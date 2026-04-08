@@ -7,6 +7,7 @@ class SignUpPageView extends ConsumerWidget {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final passwordConfirmController = TextEditingController();
   final nicknameController = TextEditingController();
 
   @override
@@ -53,6 +54,18 @@ class SignUpPageView extends ConsumerWidget {
               ),
             ),
 
+            const SizedBox(height: 16),
+
+            // 비밀번호 확인
+            TextField(
+              controller: passwordConfirmController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: '비밀번호 확인',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
             const SizedBox(height: 24),
 
             // 회원가입 버튼
@@ -65,10 +78,21 @@ class SignUpPageView extends ConsumerWidget {
                         final nickname = nicknameController.text.trim();
                         final email = emailController.text.trim();
                         final password = passwordController.text.trim();
+                        final passwordConfirm = passwordConfirmController.text.trim();
 
-                        if (nickname.isEmpty || email.isEmpty || password.isEmpty) {
+                        if (nickname.isEmpty || email.isEmpty || password.isEmpty || passwordConfirm.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('모든 값을 입력해주세요')),
+                          );
+                          return;
+                        }
+
+                        if (password != passwordConfirm) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('비밀번호가 일치하지 않습니다'),
+                              backgroundColor: Colors.red,
+                            ),
                           );
                           return;
                         }
