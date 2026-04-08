@@ -7,6 +7,7 @@ class SignUpPageView extends ConsumerWidget {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final nicknameController = TextEditingController();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,9 +20,21 @@ class SignUpPageView extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // 닉네임 입력
+            TextField(
+              controller: nicknameController,
+              decoration: const InputDecoration(
+                labelText: '닉네임',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             // 이메일 입력
             TextField(
               controller: emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: '이메일',
                 border: OutlineInputBorder(),
@@ -35,7 +48,7 @@ class SignUpPageView extends ConsumerWidget {
               controller: passwordController,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: '비밀번호',
+                labelText: '비밀번호 (6자 이상)',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -49,11 +62,11 @@ class SignUpPageView extends ConsumerWidget {
                 onPressed: isLoading
                     ? null
                     : () async {
+                        final nickname = nicknameController.text.trim();
                         final email = emailController.text.trim();
                         final password = passwordController.text.trim();
 
-                        // 최소 검증
-                        if (email.isEmpty || password.isEmpty) {
+                        if (nickname.isEmpty || email.isEmpty || password.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('모든 값을 입력해주세요')),
                           );
@@ -62,7 +75,7 @@ class SignUpPageView extends ConsumerWidget {
 
                         final error = await ref
                             .read(signUpPageViewModelProvider.notifier)
-                            .signUp(email, password);
+                            .signUp(email, password, nickname);
 
                         if (error != null) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -75,7 +88,6 @@ class SignUpPageView extends ConsumerWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('회원가입 성공! 로그인해주세요')),
                           );
-
                           Navigator.pop(context);
                         }
                       },

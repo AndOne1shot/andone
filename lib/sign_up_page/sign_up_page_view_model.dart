@@ -15,11 +15,11 @@ class SignUpPageViewModel extends Notifier<bool> {
     return false; // 로딩 상태 초기값
   }
 
-  Future<String?> signUp(String email, String password) async {
+  Future<String?> signUp(String email, String password, String nickname) async {
     state = true;
 
     try {
-      await _auth.signUp(email, password);
+      await _auth.signUp(email, password, nickname);
       return null; // 성공
     } catch (e) {
       return _handleError(e);
