@@ -13,6 +13,7 @@ class MainPageView extends ConsumerWidget {
     // 1. 데이터 구독 (watch) - DB 변경 시 자동 리빌드
     final todoAsync = ref.watch(todoListProvider);
     final monsterAsync = ref.watch(monsterProvider);
+    final userAsync = ref.watch(userProvider);
     // 2. 뷰모델 가져오기 (read) - 함수 호출용
     final viewModel = ref.read(mainPageViewModelProvider);
 
@@ -85,9 +86,9 @@ class MainPageView extends ConsumerWidget {
                             height: 80,
                             fit: BoxFit.contain,
                           ),
-                          const Text(
-                            "My Hero",
-                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          Text(
+                            userAsync.value?.nickname ?? "My Hero",
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
                           ),
                         ],
                       ),
