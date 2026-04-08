@@ -83,3 +83,5 @@ key.properties
 
 # Claude Code
 .claude/
+CLAUDE.md
+agents.md

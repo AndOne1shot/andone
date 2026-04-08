@@ -10,38 +10,28 @@ class MainPageView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. 데이터 구독 (watch) - DB 변경 시 자동 리빌드
     final todoAsync = ref.watch(todoListProvider);
     final monsterAsync = ref.watch(monsterProvider);
     final userAsync = ref.watch(userProvider);
-    // 2. 뷰모델 가져오기 (read) - 함수 호출용
     final viewModel = ref.read(mainPageViewModelProvider);
 
-    // 시작시간, 종료시간 hh:mm 형식으로 변환
-    String _formatTime(DateTime time) {
+    String formatTime(DateTime time) {
       final hour = time.hour.toString().padLeft(2, '0');
       final minute = time.minute.toString().padLeft(2, '0');
       return "$hour:$minute";
     }
 
-    // 시작시간까지 남은 시간 계산
-    String _getRemainingTime(DateTime startTime) {
+    String getRemainingTime(DateTime startTime) {
       final now = DateTime.now();
       final diff = startTime.difference(now);
-
-      if (diff.isNegative) {
-        return "시작됨"; // 이미 시작
-      }
-
+      if (diff.isNegative) return "시작됨";
       final hours = diff.inHours;
       final minutes = diff.inMinutes % 60;
-
-      if (hours > 0) {
-        return "$hours시간 ${minutes}분 전";
-      } else {
-        return "$minutes분 전";
-      }
+      if (hours > 0) return "$hours시간 ${minutes}분 전";
+      return "$minutes분 전";
     }
+
+    final user = userAsync.value;
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A1A),
@@ -49,8 +39,6 @@ class MainPageView extends ConsumerWidget {
         backgroundColor: Colors.blue,
         child: const Icon(Icons.add),
         onPressed: () {
-          // TODO: 퀘스트 등록 페이지로 이동
-          print("퀘스트 추가 버튼 클릭");
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const TodoCreatePageView()),
@@ -60,9 +48,9 @@ class MainPageView extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // 상단 20%: 캐릭터와 몬스터 영역
+            // 상단 배틀 영역
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Container(
                 margin: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -71,91 +59,151 @@ class MainPageView extends ConsumerWidget {
                   border: Border.all(color: Colors.white10, width: 2),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
                     children: [
-                      // 내 캐릭터
+                      // ── 스탯 영역 (HP, EXP) ──
                       Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(height: 30),
-                          Image.asset(
-                            "assets/image/character/test_character.png",
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.contain,
-                          ),
                           Text(
-                            userAsync.value?.nickname ?? "My Hero",
-                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                            "Lv.${user?.level ?? 1}  ${user?.nickname ?? 'My Hero'}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ],
-                      ),
-                      // 상대 몬스터
-                      monsterAsync.when(
-                        data: (monsters) {
-                          if (monsters.isEmpty) return const Text("몬스터가 없습니다.");
-                          final monster = monsters.first;
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          const SizedBox(height: 6),
+                          // HP 바
+                          Row(
                             children: [
-                              // 몬스터의 현재 체력 / 총 체력 text
-                              Text(
-                                '${monster.hp} / ${monster.maxHp}',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              const SizedBox(
+                                width: 28,
+                                child: Text("HP", style: TextStyle(color: Colors.white70, fontSize: 10)),
                               ),
-                              const SizedBox(height: 4),
-
-                              // 몬스터 체력바
-                              SizedBox(
-                                width: 80,
-                                child: Directionality(
-                                  textDirection: TextDirection.rtl,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: LinearProgressIndicator(
-                                      value: monster.hp / monster.maxHp,
-                                      minHeight: 6,
-                                      backgroundColor: Colors.grey[700],
-                                      valueColor:
-                                          const AlwaysStoppedAnimation<Color>(
-                                            Colors.red,
-                                          ),
-                                    ),
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: (user?.hp ?? 100) / (user?.maxHp ?? 100),
+                                    minHeight: 7,
+                                    backgroundColor: Colors.grey[700],
+                                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
                                   ),
                                 ),
                               ),
-                              Image.asset(
-                                // ID를 활용해 동적으로 경로 생성
-                                "assets/image/monster/monster_${monster.monsterId}.png",
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.contain,
-                                // 이미지 파일이 없을 경우를 대비한 에러 처리
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(
-                                      Icons.help,
-                                      size: 80,
-                                      color: Colors.white,
-                                    ),
-                              ),
-                              Text(
-                                monster.monsterName, // "Monster" 대신 실제 이름 표시
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
+                              const SizedBox(width: 6),
+                              SizedBox(
+                                width: 52,
+                                child: Text(
+                                  "${user?.hp ?? 100}/${user?.maxHp ?? 100}",
+                                  style: const TextStyle(color: Colors.white70, fontSize: 10),
                                 ),
                               ),
                             ],
-                          );
-                        },
-                        loading: () => const CircularProgressIndicator(),
-                        error: (err, stack) => Text("에러 발생: $err"),
+                          ),
+                          const SizedBox(height: 4),
+                          // EXP 바
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 28,
+                                child: Text("EXP", style: TextStyle(color: Colors.white70, fontSize: 10)),
+                              ),
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: (user?.exp ?? 0) / (user?.maxExp ?? 100),
+                                    minHeight: 7,
+                                    backgroundColor: Colors.grey[700],
+                                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              SizedBox(
+                                width: 52,
+                                child: Text(
+                                  "${user?.exp ?? 0}/${user?.maxExp ?? 100}",
+                                  style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(color: Colors.white24, height: 14),
+                        ],
+                      ),
+                      // ── 캐릭터 vs 몬스터 영역 ──
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // 내 캐릭터
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // 몬스터의 HP텍스트 + HP바 높이만큼 여백 맞춤
+                                const SizedBox(height: 22),
+                                Image.asset(
+                                  "assets/image/character/test_character.png",
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.contain,
+                                ),
+                                // 몬스터 이름 텍스트 높이 맞춤
+                                const SizedBox(height: 18),
+                              ],
+                            ),
+                            // 몬스터
+                            monsterAsync.when(
+                              data: (monsters) {
+                                if (monsters.isEmpty) return const Text("몬스터가 없습니다.", style: TextStyle(color: Colors.white));
+                                final monster = monsters.first;
+                                return Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${monster.hp} / ${monster.maxHp}',
+                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    SizedBox(
+                                      width: 80,
+                                      child: Directionality(
+                                        textDirection: TextDirection.rtl,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: LinearProgressIndicator(
+                                            value: monster.hp / monster.maxHp,
+                                            minHeight: 6,
+                                            backgroundColor: Colors.grey[700],
+                                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Image.asset(
+                                      "assets/image/monster/monster_${monster.monsterId}.png",
+                                      width: 80,
+                                      height: 80,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          const Icon(Icons.help, size: 80, color: Colors.white),
+                                    ),
+                                    Text(
+                                      monster.monsterName,
+                                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                                    ),
+                                  ],
+                                );
+                              },
+                              loading: () => const CircularProgressIndicator(),
+                              error: (err, stack) => Text("에러: $err"),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -163,9 +211,9 @@ class MainPageView extends ConsumerWidget {
               ),
             ),
 
-            // 하단 80%: To-do List 영역
+            // 하단 Todo 리스트 영역
             Expanded(
-              flex: 8,
+              flex: 7,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: const BoxDecoration(
@@ -202,76 +250,41 @@ class MainPageView extends ConsumerWidget {
                                     margin: const EdgeInsets.only(bottom: 10),
                                     child: ListTile(
                                       onTap: () {
-                                        // 상세 페이지로 데이터 전달
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) =>
-                                                TodoDetailPageView(todo: todo),
+                                            builder: (context) => TodoDetailPageView(todo: todo),
                                           ),
                                         );
                                       },
-                                      // 제목
                                       title: Text(
                                         todo.title,
                                         style: TextStyle(
-                                          decoration: todo.isCompleted
-                                              ? TextDecoration.lineThrough
-                                              : TextDecoration.none,
-                                          color: todo.isCompleted
-                                              ? Colors.grey
-                                              : Colors.black,
+                                          decoration: todo.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                                          color: todo.isCompleted ? Colors.grey : Colors.black,
                                         ),
                                       ),
-                                      // 시작시간 ~ 종료시간
                                       subtitle: Text(
-                                        "${_formatTime(todo.startTime)} ~ ${_formatTime(todo.endTime)}",
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        "${formatTime(todo.startTime)} ~ ${formatTime(todo.endTime)}",
+                                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
                                       ),
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              // 남은 시간 표시
-                                              const Icon(
-                                                Icons.access_time,
-                                                size: 14,
-                                                color: Colors.grey,
-                                              ),
-                                              const SizedBox(width: 2),
-                                              Text(
-                                                _getRemainingTime(
-                                                  todo.startTime,
-                                                ),
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
+                                          const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                                          const SizedBox(width: 2),
+                                          Text(
+                                            getRemainingTime(todo.startTime),
+                                            style: const TextStyle(fontSize: 12),
                                           ),
                                           const SizedBox(width: 8),
-                                          // 완료 버튼
                                           IconButton(
                                             icon: Icon(
-                                              todo.isCompleted
-                                                  ? Icons.check_circle
-                                                  : Icons
-                                                        .radio_button_unchecked,
-                                              color: todo.isCompleted
-                                                  ? Colors.green
-                                                  : Colors.grey,
+                                              todo.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                                              color: todo.isCompleted ? Colors.green : Colors.grey,
                                             ),
                                             onPressed: () async {
-                                              await viewModel.toggleTodo(
-                                                todo.id,
-                                                todo.isCompleted,
-                                              );
+                                              await viewModel.toggleTodo(todo.id, todo.isCompleted);
                                             },
                                           ),
                                         ],
@@ -280,27 +293,18 @@ class MainPageView extends ConsumerWidget {
                                   );
                                 },
                               ),
-                        // 데이터를 로딩 중일 때
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        // 에러가 발생했을 때
-                        error: (err, stack) =>
-                            Center(child: Text("에러 발생: $err")),
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (err, stack) => Center(child: Text("에러 발생: $err")),
                       ),
                     ),
                     const SizedBox(height: 8),
-
-                    // 🔥 로그아웃 버튼
+                    // 로그아웃 버튼
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                        ),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                         onPressed: () async {
-                          await ref
-                              .read(loginPageViewModelProvider.notifier)
-                              .signOut();
+                          await ref.read(loginPageViewModelProvider.notifier).signOut();
                         },
                         child: const Text('로그아웃'),
                       ),

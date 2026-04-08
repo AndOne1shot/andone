@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Provider
@@ -18,7 +19,9 @@ class TodoCreatePageViewModel {
     required int repeat,
   }) async {
     try {
-      await _db.collection('todos').add({
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      await _db.collection('users').doc(uid).collection('todos').add({
         'title': title,
         'content': content,
         'difficulty': difficulty,

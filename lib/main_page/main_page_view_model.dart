@@ -16,11 +16,15 @@ final userProvider = StreamProvider<UserModel?>((ref) {
       .map((doc) => doc.exists ? UserModel.fromFirestore(doc) : null);
 });
 
-// todo-list 불러옴
+// todo-list 불러옴 (유저별)
 final todoListProvider = StreamProvider<List<TodoModel>>((ref) {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return Stream.value([]);
   return FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
       .collection('todos')
-      .orderBy('startTime', descending: false) // 오름차순 정렬
+      .orderBy('startTime', descending: false)
       .snapshots()
       .map(
         (snapshot) =>
@@ -28,11 +32,14 @@ final todoListProvider = StreamProvider<List<TodoModel>>((ref) {
       );
 });
 
-// 몬스터 정보 불러옴
+// 몬스터 정보 불러옴 (유저별)
 final monsterProvider = StreamProvider<List<MonsterModel>>((ref) {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return Stream.value([]);
   return FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
       .collection('monsters')
-      .where('monsterId', isEqualTo: 1)
       .snapshots()
       .map(
         (snapshot) => snapshot.docs
@@ -48,10 +55,15 @@ class MainPageViewModel {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   Future<void> toggleTodo(String docId, bool currentStatus) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
     try {
-      await _db.collection('todos').doc(docId).update({
-        'isCompleted': !currentStatus,
-      });
+      await _db
+          .collection('users')
+          .doc(uid)
+          .collection('todos')
+          .doc(docId)
+          .update({'isCompleted': !currentStatus});
     } catch (e) {
       print("업데이트 실패: $e");
     }

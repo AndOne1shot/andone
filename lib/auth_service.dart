@@ -30,6 +30,20 @@ class AuthService {
         'maxHp': 100,
         'atk': 10,
       });
+      // 첫 번째 몬스터 초기 데이터 생성
+      await _db
+          .collection('users')
+          .doc(user.uid)
+          .collection('monsters')
+          .add({
+        'monsterId': 1,
+        'monsterName': '슬라임',
+        'atk': 5,
+        'maxHp': 100,
+        'hp': 100,
+        'monsterLevel': 1,
+        'rewardExp': 30,
+      });
       await _auth.signOut(); // 자동 로그인 방지
     }
     return user;

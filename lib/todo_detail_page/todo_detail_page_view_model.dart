@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final todoDetailViewModelProvider = Provider((ref) => TodoDetailViewModel());
@@ -16,15 +17,21 @@ class TodoDetailViewModel {
     required DateTime endTime,
     required int repeat,
   }) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
     try {
-      await _db.collection('todos').doc(docId).update({
+      await _db
+          .collection('users')
+          .doc(uid)
+          .collection('todos')
+          .doc(docId)
+          .update({
         'title': newTitle,
         'content': newContent,
         'difficulty': difficulty,
         'startTime': startTime,
         'endTime': endTime,
         'repeat': repeat,
-        // 'endTime': endTime,
       });
       print("업데이트 성공!");
     } catch (e) {
@@ -34,8 +41,15 @@ class TodoDetailViewModel {
 
   // 삭제 기능
   Future<void> deleteTodo(String docId) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
     try {
-      await _db.collection('todos').doc(docId).delete();
+      await _db
+          .collection('users')
+          .doc(uid)
+          .collection('todos')
+          .doc(docId)
+          .delete();
     } catch (e) {
       print("삭제 실패: $e");
     }
