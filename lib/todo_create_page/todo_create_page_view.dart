@@ -21,6 +21,7 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
   late DateTime _endDateTime;
 
   late RepeatType _repeat;
+  List<int> _repeatDays = [];
 
   @override
   void initState() {
@@ -90,6 +91,7 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
             ScheduleSelector(
               initialStartTime: _startDateTime,
               initialEndTime: _endDateTime,
+              isRepeat: _repeat != RepeatType.none,
               onChanged: (start, end) {
                 _startDateTime = start;
                 _endDateTime = end;
@@ -101,9 +103,16 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
             // 반복
             RepeatSelector(
               value: _repeat,
+              repeatDays: _repeatDays,
               onChanged: (v) {
                 setState(() {
                   _repeat = v;
+                  _repeatDays = [];
+                });
+              },
+              onRepeatDaysChanged: (days) {
+                setState(() {
+                  _repeatDays = days;
                 });
               },
             ),
@@ -138,6 +147,7 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
                     startTime: _startDateTime,
                     endTime: _endDateTime,
                     repeat: _repeat.index,
+                    repeatDays: _repeatDays,
                   );
 
                   if (context.mounted) {

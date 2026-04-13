@@ -16,6 +16,7 @@ class TodoDetailViewModel {
     required DateTime startTime,
     required DateTime endTime,
     required int repeat,
+    List<int> repeatDays = const [],
   }) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -32,6 +33,7 @@ class TodoDetailViewModel {
         'startTime': startTime,
         'endTime': endTime,
         'repeat': repeat,
+        'repeatDays': repeatDays,
       });
       print("업데이트 성공!");
     } catch (e) {

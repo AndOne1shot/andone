@@ -4,12 +4,14 @@ class ScheduleSelector extends StatefulWidget {
   final DateTime initialStartTime;
   final DateTime initialEndTime;
   final Function(DateTime start, DateTime end) onChanged;
+  final bool isRepeat;
 
   const ScheduleSelector({
     super.key,
     required this.initialStartTime,
     required this.initialEndTime,
     required this.onChanged,
+    this.isRepeat = false,
   });
 
   @override
@@ -99,9 +101,9 @@ class _ScheduleSelectorState extends State<ScheduleSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '일정 설정',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        Text(
+          widget.isRepeat ? '시작일 설정' : '일정 설정',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
         Align(
@@ -112,7 +114,9 @@ class _ScheduleSelectorState extends State<ScheduleSelector> {
               onPressed: _pickDate,
               icon: const Icon(Icons.calendar_today_outlined, size: 18),
               label: Text(
-                "${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}",
+                widget.isRepeat
+                    ? "시작일: ${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}"
+                    : "${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}",
               ),
             ),
           ),

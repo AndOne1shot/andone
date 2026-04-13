@@ -17,6 +17,7 @@ class TodoCreatePageViewModel {
     required DateTime startTime,
     required DateTime endTime,
     required int repeat,
+    List<int> repeatDays = const [],
   }) async {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -29,6 +30,8 @@ class TodoCreatePageViewModel {
         'endTime': endTime,
         'isCompleted': false,
         'repeat': repeat,
+        'repeatDays': repeatDays,
+        'lastCompletedDate': null,
       });
     } catch (e) {
       print("Todo 생성 실패: $e");

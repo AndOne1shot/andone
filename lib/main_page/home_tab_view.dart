@@ -1,5 +1,6 @@
 import 'package:andone/main_page/main_page_view_model.dart';
 import 'package:andone/todo_create_page/todo_create_page_view.dart';
+import 'package:andone/todo_detail_page/repeat_selector.dart';
 import 'package:andone/todo_detail_page/todo_detail_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,16 @@ class HomeTabView extends ConsumerWidget {
       final hour = time.hour.toString().padLeft(2, '0');
       final minute = time.minute.toString().padLeft(2, '0');
       return "$hour:$minute";
+    }
+
+    String getRepeatLabel(int repeat, List<int> repeatDays) {
+      const dayLabels = ['월', '화', '수', '목', '금', '토', '일'];
+      if (repeat == RepeatType.daily.index) return '매일';
+      if (repeat == RepeatType.weekly.index && repeatDays.isNotEmpty) {
+        final days = repeatDays.map((d) => dayLabels[d - 1]).join('·');
+        return '매주 $days';
+      }
+      return '';
     }
 
     String getRemainingTime(DateTime startTime) {
@@ -245,12 +256,30 @@ class HomeTabView extends ConsumerWidget {
                                           ),
                                         );
                                       },
-                                      title: Text(
-                                        todo.title,
-                                        style: TextStyle(
-                                          decoration: todo.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
-                                          color: todo.isCompleted ? Colors.grey : Colors.black,
-                                        ),
+                                      title: Row(
+                                        children: [
+                                          Text(
+                                            todo.title,
+                                            style: TextStyle(
+                                              decoration: todo.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
+                                              color: todo.isCompleted ? Colors.grey : Colors.black,
+                                            ),
+                                          ),
+                                          if (todo.repeat != 0) ...[
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.withOpacity(0.15),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                getRepeatLabel(todo.repeat, todo.repeatDays),
+                                                style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                       subtitle: Text(
                                         "${formatTime(todo.startTime)} ~ ${formatTime(todo.endTime)}",

@@ -26,6 +26,7 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
 
   // 반복도 변수
   late RepeatType _repeat;
+  late List<int> _repeatDays;
 
   @override
   void initState() {
@@ -39,7 +40,8 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
     _startDateTime = widget.todo.startTime;
     _endDateTime = widget.todo.endTime;
 
-    _repeat = RepeatType.values[widget.todo.repeat ?? 0];
+    _repeat = RepeatType.values[widget.todo.repeat];
+    _repeatDays = List<int>.from(widget.todo.repeatDays);
   }
 
   @override
@@ -110,6 +112,7 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
             ScheduleSelector(
               initialStartTime: widget.todo.startTime,
               initialEndTime: widget.todo.endTime,
+              isRepeat: _repeat != RepeatType.none,
               onChanged: (start, end) {
                 _startDateTime = start;
                 _endDateTime = end;
@@ -119,9 +122,16 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
             // 반복도 설정
             RepeatSelector(
               value: _repeat,
+              repeatDays: _repeatDays,
               onChanged: (value) {
                 setState(() {
                   _repeat = value;
+                  _repeatDays = [];
+                });
+              },
+              onRepeatDaysChanged: (days) {
+                setState(() {
+                  _repeatDays = days;
                 });
               },
             ),
@@ -191,6 +201,7 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                         startTime: _startDateTime,
                         endTime: _endDateTime,
                         repeat: _repeat.index,
+                        repeatDays: _repeatDays,
                       );
                       if (context.mounted) {
                         Navigator.pop(context);
