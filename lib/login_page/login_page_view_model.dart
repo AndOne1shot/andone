@@ -30,10 +30,6 @@ class LoginPageViewModel extends Notifier<bool> {
     }
   }
 
-  Future<void> signOut() async {
-    await _auth.signOut();
-  }
-
   // 🔥 Firebase 에러 → 사용자 메시지
   String _handleError(dynamic e) {
     if (e is FirebaseAuthException) {
