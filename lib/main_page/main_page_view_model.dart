@@ -110,6 +110,22 @@ class MainPageViewModel {
       'totalCompleted': totalCompleted + 1,
     });
 
+    // 날짜별 완료 기록 저장
+    final today = DateTime.now();
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final historyRef = _db
+        .collection('users')
+        .doc(uid)
+        .collection('completedHistory')
+        .doc(todayStr);
+    final historyDoc = await historyRef.get();
+    if (historyDoc.exists) {
+      await historyRef.update({'count': (historyDoc.data()!['count'] ?? 0) + 1});
+    } else {
+      await historyRef.set({'count': 1});
+    }
+
     print("기분: $currentMood → $newMood / 골드: $currentGold → $newGold");
   }
 }
