@@ -47,7 +47,13 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
     final viewModel = ref.read(todoCreateViewModelProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("퀘스트 생성")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        title: const Text("퀘스트 생성"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -154,7 +160,14 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
                     Navigator.pop(context);
                   }
                 },
-                child: const Text("퀘스트 생성"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text(
+                  "퀘스트 생성",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],

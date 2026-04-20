@@ -4,23 +4,19 @@ class UserModel {
   final String uid;
   final String email;
   final String nickname;
-  final int level;
-  final int exp;
-  final int maxExp;
-  final int hp;
-  final int maxHp;
-  final int atk;
+  final int mood;
+  final int maxMood;
+  final int gold;
+  final int totalCompleted; // 누적 todo 완료 수
 
   UserModel({
     required this.uid,
     required this.email,
     required this.nickname,
-    required this.level,
-    required this.exp,
-    required this.maxExp,
-    required this.hp,
-    required this.maxHp,
-    required this.atk,
+    required this.mood,
+    required this.maxMood,
+    required this.gold,
+    required this.totalCompleted,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -29,12 +25,10 @@ class UserModel {
       uid: doc.id,
       email: data['email'] ?? '',
       nickname: data['nickname'] ?? '',
-      level: data['level'] ?? 1,
-      exp: data['exp'] ?? 0,
-      maxExp: data['maxExp'] ?? 100,
-      hp: data['hp'] ?? 100,
-      maxHp: data['maxHp'] ?? 100,
-      atk: data['atk'] ?? 10,
+      mood: data['mood'] ?? 50,
+      maxMood: data['maxMood'] ?? 100,
+      gold: data['gold'] ?? 0,
+      totalCompleted: data['totalCompleted'] ?? 0,
     );
   }
 
@@ -42,37 +36,28 @@ class UserModel {
     return {
       'email': email,
       'nickname': nickname,
-      'level': level,
-      'exp': exp,
-      'maxExp': maxExp,
-      'hp': hp,
-      'maxHp': maxHp,
-      'atk': atk,
+      'mood': mood,
+      'maxMood': maxMood,
+      'gold': gold,
+      'totalCompleted': totalCompleted,
     };
   }
 
-  // 레벨업 여부 확인
-  bool get canLevelUp => exp >= maxExp;
-
   UserModel copyWith({
     String? nickname,
-    int? level,
-    int? exp,
-    int? maxExp,
-    int? hp,
-    int? maxHp,
-    int? atk,
+    int? mood,
+    int? maxMood,
+    int? gold,
+    int? totalCompleted,
   }) {
     return UserModel(
       uid: uid,
       email: email,
       nickname: nickname ?? this.nickname,
-      level: level ?? this.level,
-      exp: exp ?? this.exp,
-      maxExp: maxExp ?? this.maxExp,
-      hp: hp ?? this.hp,
-      maxHp: maxHp ?? this.maxHp,
-      atk: atk ?? this.atk,
+      mood: mood ?? this.mood,
+      maxMood: maxMood ?? this.maxMood,
+      gold: gold ?? this.gold,
+      totalCompleted: totalCompleted ?? this.totalCompleted,
     );
   }
 }

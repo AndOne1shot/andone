@@ -37,10 +37,6 @@ class ProfilePageView extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              'Lv.${user?.level ?? 1}',
-              style: const TextStyle(color: Colors.amber, fontSize: 16),
-            ),
             const SizedBox(height: 32),
             Container(
               width: double.infinity,
@@ -52,18 +48,94 @@ class ProfilePageView extends ConsumerWidget {
               child: Column(
                 children: [
                   _statRow(
-                    'HP',
-                    '${user?.hp ?? 0} / ${user?.maxHp ?? 100}',
-                    Colors.green,
+                    '😊 기분',
+                    '${user?.mood ?? 50} / ${user?.maxMood ?? 100}',
+                    Colors.pinkAccent,
                   ),
                   const SizedBox(height: 12),
                   _statRow(
-                    'EXP',
-                    '${user?.exp ?? 0} / ${user?.maxExp ?? 100}',
+                    '🪙 골드',
+                    '${user?.gold ?? 0}',
                     Colors.amber,
                   ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 퀘스트 달성 진행도
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2D2D2D),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '⚔️ 퀘스트 달성',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  _statRow('ATK', '${user?.atk ?? 10}', Colors.redAccent),
+                  Builder(
+                    builder: (_) {
+                      final total = user?.totalCompleted ?? 0;
+                      // 다음 마일스톤 계산 (10, 20, 50, 100, 200, ...)
+                      const milestones = [10, 20, 50, 100, 200, 500];
+                      final nextMilestone = milestones.firstWhere(
+                        (m) => m > total,
+                        orElse: () => ((total ~/ 100) + 1) * 100,
+                      );
+                      final prevMilestone = milestones.lastWhere(
+                        (m) => m <= total,
+                        orElse: () => 0,
+                      );
+                      final progress = (total - prevMilestone) /
+                          (nextMilestone - prevMilestone);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '총 $total개 완료',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                '목표 $nextMilestone개',
+                                style: const TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progress.clamp(0.0, 1.0),
+                              minHeight: 8,
+                              backgroundColor: Colors.grey[700],
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Colors.greenAccent,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),

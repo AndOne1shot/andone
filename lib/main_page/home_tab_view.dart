@@ -5,13 +5,43 @@ import 'package:andone/todo_detail_page/todo_detail_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeTabView extends ConsumerWidget {
+class HomeTabView extends ConsumerStatefulWidget {
   const HomeTabView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeTabView> createState() => _HomeTabViewState();
+}
+
+class _HomeTabViewState extends ConsumerState<HomeTabView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+  late Animation<double> _xAnim;
+  late Animation<double> _yAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 10000),
+    )..repeat(reverse: true);
+
+    _xAnim = Tween<double>(begin: -1.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+    );
+
+    _yAnim = Tween<double>(begin: 0, end: 1).animate(_animController);
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final todoAsync = ref.watch(todoListProvider);
-    final monsterAsync = ref.watch(monsterProvider);
     final userAsync = ref.watch(userProvider);
     final viewModel = ref.read(mainPageViewModelProvider);
     final user = userAsync.value;
@@ -20,6 +50,41 @@ class HomeTabView extends ConsumerWidget {
       final hour = time.hour.toString().padLeft(2, '0');
       final minute = time.minute.toString().padLeft(2, '0');
       return "$hour:$minute";
+    }
+
+    String getRemainingTime(DateTime startTime) {
+      final now = DateTime.now();
+      final diff = startTime.difference(now);
+      if (diff.isNegative) return "시작됨";
+      final hours = diff.inHours;
+      final minutes = diff.inMinutes % 60;
+      if (hours > 0) return "$hours시간 ${minutes}분 전";
+      return "$minutes분 전";
+    }
+
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    // 오늘 표시할 todo 필터링
+    bool shouldShowTodo(todo) {
+      // 반복 있음: 항상 표시 (수정/삭제 접근 가능하도록)
+      if (todo.repeat != 0) return true;
+
+      // 반복 없음: 오늘 날짜인 것만 표시
+      final startDate = DateTime(
+        todo.startTime.year,
+        todo.startTime.month,
+        todo.startTime.day,
+      );
+      return startDate == todayDate;
+    }
+
+    // 반복 todo 완료 여부 판단
+    bool isCompletedToday(todo) {
+      if (todo.repeat == 0) return todo.isCompleted;
+      return todo.lastCompletedDate == todayStr;
     }
 
     String getRepeatLabel(int repeat, List<int> repeatDays) {
@@ -32,14 +97,16 @@ class HomeTabView extends ConsumerWidget {
       return '';
     }
 
-    String getRemainingTime(DateTime startTime) {
-      final now = DateTime.now();
-      final diff = startTime.difference(now);
-      if (diff.isNegative) return "시작됨";
-      final hours = diff.inHours;
-      final minutes = diff.inMinutes % 60;
-      if (hours > 0) return "$hours시간 ${minutes}분 전";
-      return "$minutes분 전";
+    final mood = user?.mood ?? 50;
+    final maxMood = user?.maxMood ?? 100;
+    final moodRatio = mood / maxMood;
+
+    // 기분 수치에 따른 이모지
+    String getMoodEmoji() {
+      if (moodRatio >= 0.8) return '😊';
+      if (moodRatio >= 0.5) return '😐';
+      if (moodRatio >= 0.2) return '😢';
+      return '😫';
     }
 
     return Scaffold(
@@ -57,9 +124,9 @@ class HomeTabView extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // 상단 배틀 영역
+            // 상단 캐릭터 영역
             Expanded(
-              flex: 3,
+              flex: 4,
               child: Container(
                 margin: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -68,145 +135,98 @@ class HomeTabView extends ConsumerWidget {
                   border: Border.all(color: Colors.white10, width: 2),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(10.0),
+                  padding: const EdgeInsets.all(14.0),
                   child: Column(
                     children: [
-                      // 스탯 영역 (HP, EXP)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // 닉네임 + 골드
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Lv.${user?.level ?? 1}  ${user?.nickname ?? 'My Hero'}",
+                            user?.nickname ?? 'My Pet',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 6),
                           Row(
                             children: [
-                              const SizedBox(
-                                width: 28,
-                                child: Text("HP", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                              ),
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: (user?.hp ?? 100) / (user?.maxHp ?? 100),
-                                    minHeight: 7,
-                                    backgroundColor: Colors.grey[700],
-                                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              SizedBox(
-                                width: 52,
-                                child: Text(
-                                  "${user?.hp ?? 100}/${user?.maxHp ?? 100}",
-                                  style: const TextStyle(color: Colors.white70, fontSize: 10),
+                              const Text('🪙', style: TextStyle(fontSize: 14)),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${user?.gold ?? 0}',
+                                style: const TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const SizedBox(
-                                width: 28,
-                                child: Text("EXP", style: TextStyle(color: Colors.white70, fontSize: 10)),
-                              ),
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: (user?.exp ?? 0) / (user?.maxExp ?? 100),
-                                    minHeight: 7,
-                                    backgroundColor: Colors.grey[700],
-                                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              SizedBox(
-                                width: 52,
-                                child: Text(
-                                  "${user?.exp ?? 0}/${user?.maxExp ?? 100}",
-                                  style: const TextStyle(color: Colors.white70, fontSize: 10),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Divider(color: Colors.white24, height: 14),
                         ],
                       ),
-                      // 캐릭터 vs 몬스터 영역
+                      const SizedBox(height: 10),
+                      // 문어 캐릭터
                       Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const SizedBox(height: 22),
-                                Image.asset(
-                                  "assets/image/character/test_character_1.png",
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.contain,
-                                ),
-                                const SizedBox(height: 18),
-                              ],
-                            ),
-                            monsterAsync.when(
-                              data: (monsters) {
-                                if (monsters.isEmpty) return const Text("몬스터가 없습니다.", style: TextStyle(color: Colors.white));
-                                final monster = monsters.first;
-                                return Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      '${monster.hp} / ${monster.maxHp}',
-                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    SizedBox(
-                                      width: 80,
-                                      child: Directionality(
-                                        textDirection: TextDirection.rtl,
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: LinearProgressIndicator(
-                                            value: monster.hp / monster.maxHp,
-                                            minHeight: 6,
-                                            backgroundColor: Colors.grey[700],
-                                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Image.asset(
-                                      "assets/image/monster/monster_${monster.monsterId}.png",
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const Icon(Icons.help, size: 80, color: Colors.white),
-                                    ),
-                                    Text(
-                                      monster.monsterName,
-                                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                                    ),
-                                  ],
-                                );
-                              },
-                              loading: () => const CircularProgressIndicator(),
-                              error: (err, stack) => Text("에러: $err"),
-                            ),
-                          ],
+                        child: AnimatedBuilder(
+                          animation: _animController,
+                          builder: (context, child) {
+                            final dy = -8 * (1 - ((_yAnim.value - 0.5).abs() * 2));
+                            final isRight = _animController.status == AnimationStatus.forward;
+                            return Align(
+                              alignment: Alignment(_xAnim.value, 0.6 + dy * 0.05),
+                              child: Image.asset(
+                                isRight
+                                    ? 'assets/image/character/my_pet_right.png'
+                                    : 'assets/image/character/my_pet_left.png',
+                                fit: BoxFit.contain,
+                              ),
+                            );
+                          },
                         ),
+                      ),
+                      const SizedBox(height: 10),
+                      // 기분 바
+                      Row(
+                        children: [
+                          Text(
+                            getMoodEmoji(),
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            '기분',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: moodRatio,
+                                minHeight: 8,
+                                backgroundColor: Colors.grey[700],
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  moodRatio >= 0.5
+                                      ? Colors.pinkAccent
+                                      : Colors.blueGrey,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$mood/$maxMood',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -216,7 +236,7 @@ class HomeTabView extends ConsumerWidget {
 
             // 하단 Todo 리스트 영역
             Expanded(
-              flex: 7,
+              flex: 6,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: const BoxDecoration(
@@ -232,108 +252,169 @@ class HomeTabView extends ConsumerWidget {
                     const SizedBox(height: 24),
                     const Text(
                       "오늘의 퀘스트 (To-do)",
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Expanded(
                       child: todoAsync.when(
-                        data: (todos) => todos.isEmpty
-                            ? const Center(child: Text("오늘의 퀘스트가 없습니다!"))
-                            : ListView.builder(
-                                itemCount: todos.length,
-                                itemBuilder: (context, index) {
-                                  final todo = todos[index];
-                                  return Card(
-                                    elevation: 0,
-                                    color: Colors.grey[100],
-                                    margin: const EdgeInsets.only(bottom: 10),
-                                    child: ListTile(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => TodoDetailPageView(todo: todo),
+                        data: (todos) {
+                          final filtered = todos.where(shouldShowTodo).toList();
+                          if (filtered.isEmpty) {
+                            return const Center(child: Text("오늘의 퀘스트가 없습니다!"));
+                          }
+                          return ListView.builder(
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final todo = filtered[index];
+                              final completed = isCompletedToday(todo);
+                              return Card(
+                                elevation: 0,
+                                color: Colors.grey[100],
+                                margin: const EdgeInsets.only(bottom: 10),
+                                child: ListTile(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            TodoDetailPageView(todo: todo),
+                                      ),
+                                    );
+                                  },
+                                  title: Row(
+                                    children: [
+                                      Text(
+                                        todo.title,
+                                        style: TextStyle(
+                                          decoration: completed
+                                              ? TextDecoration.lineThrough
+                                              : TextDecoration.none,
+                                          color: completed
+                                              ? Colors.grey
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                      if (todo.repeat != 0) ...[
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
                                           ),
-                                        );
-                                      },
-                                      title: Row(
-                                        children: [
-                                          Text(
-                                            todo.title,
-                                            style: TextStyle(
-                                              decoration: todo.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
-                                              color: todo.isCompleted ? Colors.grey : Colors.black,
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.withOpacity(
+                                              0.15,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
                                             ),
                                           ),
-                                          if (todo.repeat != 0) ...[
-                                            const SizedBox(width: 6),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue.withOpacity(0.15),
-                                                borderRadius: BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                getRepeatLabel(todo.repeat, todo.repeatDays),
-                                                style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
-                                              ),
+                                          child: Text(
+                                            getRepeatLabel(
+                                              todo.repeat,
+                                              todo.repeatDays,
                                             ),
-                                          ],
-                                        ],
-                                      ),
-                                      subtitle: Text(
-                                        "${formatTime(todo.startTime)} ~ ${formatTime(todo.endTime)}",
-                                        style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
-                                      ),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                                          const SizedBox(width: 2),
-                                          Text(getRemainingTime(todo.startTime), style: const TextStyle(fontSize: 12)),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            icon: Icon(
-                                              todo.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-                                              color: todo.isCompleted ? Colors.green : Colors.grey,
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.blue,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                            onPressed: todo.isCompleted
-                                                ? null
-                                                : () async {
-                                                    final confirm = await showDialog<bool>(
-                                                      context: context,
-                                                      builder: (context) => AlertDialog(
-                                                        title: const Text('퀘스트 완료'),
-                                                        content: const Text('완료하면 다시 취소할 수 없어요.\n정말 완료할까요?'),
-                                                        actions: [
-                                                          TextButton(
-                                                            onPressed: () => Navigator.pop(context, false),
-                                                            child: const Text('취소'),
-                                                          ),
-                                                          TextButton(
-                                                            onPressed: () => Navigator.pop(context, true),
-                                                            child: const Text('완료', style: TextStyle(color: Colors.green)),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                    if (confirm == true) {
-                                                      await viewModel.toggleTodo(
-                                                        todo.id,
-                                                        todo.isCompleted,
-                                                        difficulty: todo.difficulty,
-                                                      );
-                                                    }
-                                                  },
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  subtitle: Text(
+                                    "${formatTime(todo.startTime)} ~ ${formatTime(todo.endTime)}",
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                  );
-                                },
-                              ),
-                        loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (err, stack) => Center(child: Text("에러 발생: $err")),
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.access_time,
+                                        size: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        getRemainingTime(todo.startTime),
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      IconButton(
+                                        icon: Icon(
+                                          completed
+                                              ? Icons.check_circle
+                                              : Icons.radio_button_unchecked,
+                                          color: completed
+                                              ? Colors.green
+                                              : Colors.grey,
+                                        ),
+                                        onPressed: completed
+                                            ? null
+                                            : () async {
+                                                final confirm = await showDialog<bool>(
+                                                  context: context,
+                                                  builder: (context) => AlertDialog(
+                                                    title: const Text('퀘스트 완료'),
+                                                    content: const Text(
+                                                      '완료하면 다시 취소할 수 없어요.\n정말 완료할까요?',
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                              context,
+                                                              false,
+                                                            ),
+                                                        child: const Text('취소'),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                              context,
+                                                              true,
+                                                            ),
+                                                        child: const Text(
+                                                          '완료',
+                                                          style: TextStyle(
+                                                            color: Colors.green,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                                if (confirm == true) {
+                                                  await viewModel.toggleTodo(
+                                                    todo.id,
+                                                    completed,
+                                                    difficulty: todo.difficulty,
+                                                    repeat: todo.repeat,
+                                                  );
+                                                }
+                                              },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (err, stack) =>
+                            Center(child: Text("에러 발생: $err")),
                       ),
                     ),
                   ],
