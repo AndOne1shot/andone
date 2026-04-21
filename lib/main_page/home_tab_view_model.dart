@@ -21,9 +21,9 @@ final todoListProvider = StreamProvider<List<TodoModel>>((ref) {
 });
 
 // 기능 Provider 및 ViewModel 클래스
-final mainPageViewModelProvider = Provider((ref) => MainPageViewModel());
+final homeTabViewModelProvider = Provider((ref) => HomeTabViewModel());
 
-class MainPageViewModel {
+class HomeTabViewModel {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // 난이도별 골드 보상

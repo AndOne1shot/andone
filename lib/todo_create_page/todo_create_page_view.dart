@@ -44,7 +44,7 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = ref.read(todoCreateViewModelProvider);
+    final viewModel = ref.read(todoCreatePageViewModelProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,

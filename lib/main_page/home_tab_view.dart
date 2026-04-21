@@ -1,4 +1,4 @@
-import 'package:andone/main_page/main_page_view_model.dart';
+import 'package:andone/main_page/home_tab_view_model.dart';
 import 'package:andone/todo_create_page/todo_create_page_view.dart';
 import 'package:andone/todo_detail_page/repeat_selector.dart';
 import 'package:andone/todo_detail_page/todo_detail_page_view.dart';
@@ -43,7 +43,7 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
   Widget build(BuildContext context) {
     final todoAsync = ref.watch(todoListProvider);
     final userAsync = ref.watch(userProvider);
-    final viewModel = ref.read(mainPageViewModelProvider);
+    final viewModel = ref.read(homeTabViewModelProvider);
     final user = userAsync.value;
 
     String formatTime(DateTime time) {

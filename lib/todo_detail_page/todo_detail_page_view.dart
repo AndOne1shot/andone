@@ -53,7 +53,7 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = ref.read(todoDetailViewModelProvider);
+    final viewModel = ref.read(todoDetailPageViewModelProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
