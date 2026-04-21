@@ -7,7 +7,8 @@ class UserModel {
   final int mood;
   final int maxMood;
   final int gold;
-  final int totalCompleted; // 누적 todo 완료 수
+  final int totalCompleted;
+  final String? lastMoodDecreaseDate;
 
   UserModel({
     required this.uid,
@@ -17,6 +18,7 @@ class UserModel {
     required this.maxMood,
     required this.gold,
     required this.totalCompleted,
+    this.lastMoodDecreaseDate,
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -29,6 +31,7 @@ class UserModel {
       maxMood: data['maxMood'] ?? 100,
       gold: data['gold'] ?? 0,
       totalCompleted: data['totalCompleted'] ?? 0,
+      lastMoodDecreaseDate: data['lastMoodDecreaseDate'],
     );
   }
 
@@ -40,6 +43,7 @@ class UserModel {
       'maxMood': maxMood,
       'gold': gold,
       'totalCompleted': totalCompleted,
+      'lastMoodDecreaseDate': lastMoodDecreaseDate,
     };
   }
 
@@ -49,6 +53,7 @@ class UserModel {
     int? maxMood,
     int? gold,
     int? totalCompleted,
+    String? lastMoodDecreaseDate,
   }) {
     return UserModel(
       uid: uid,
@@ -58,6 +63,7 @@ class UserModel {
       maxMood: maxMood ?? this.maxMood,
       gold: gold ?? this.gold,
       totalCompleted: totalCompleted ?? this.totalCompleted,
+      lastMoodDecreaseDate: lastMoodDecreaseDate ?? this.lastMoodDecreaseDate,
     );
   }
 }

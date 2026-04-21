@@ -21,6 +21,9 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(homeTabViewModelProvider).checkDailyMoodDecrease();
+    });
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 10000),

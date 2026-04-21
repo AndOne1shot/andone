@@ -95,9 +95,11 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
 
             // 일정
             ScheduleSelector(
+              key: ValueKey(_startDateTime),
               initialStartTime: _startDateTime,
               initialEndTime: _endDateTime,
               isRepeat: _repeat != RepeatType.none,
+              repeatDays: _repeatDays,
               onChanged: (start, end) {
                 _startDateTime = start;
                 _endDateTime = end;
@@ -119,6 +121,21 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
               onRepeatDaysChanged: (days) {
                 setState(() {
                   _repeatDays = days;
+                  // 요일 바뀔 때마다 오늘부터 가장 가까운 요일로 시작일 재계산
+                  if (days.isNotEmpty) {
+                    DateTime next = DateTime.now();
+                    while (!days.contains(next.weekday)) {
+                      next = next.add(const Duration(days: 1));
+                    }
+                    _startDateTime = DateTime(
+                      next.year, next.month, next.day,
+                      _startDateTime.hour, _startDateTime.minute,
+                    );
+                    _endDateTime = DateTime(
+                      next.year, next.month, next.day,
+                      _endDateTime.hour, _endDateTime.minute,
+                    );
+                  }
                 });
               },
             ),

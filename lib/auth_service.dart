@@ -27,6 +27,7 @@ class AuthService {
         'maxMood': 100,
         'gold': 0,
         'totalCompleted': 0,
+        'lastMoodDecreaseDate': null,
       });
       await _auth.signOut(); // 자동 로그인 방지
     }

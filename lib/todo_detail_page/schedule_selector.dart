@@ -5,6 +5,7 @@ class ScheduleSelector extends StatefulWidget {
   final DateTime initialEndTime;
   final Function(DateTime start, DateTime end) onChanged;
   final bool isRepeat;
+  final List<int> repeatDays;
 
   const ScheduleSelector({
     super.key,
@@ -12,6 +13,7 @@ class ScheduleSelector extends StatefulWidget {
     required this.initialEndTime,
     required this.onChanged,
     this.isRepeat = false,
+    this.repeatDays = const [],
   });
 
   @override
@@ -33,11 +35,15 @@ class _ScheduleSelectorState extends State<ScheduleSelector> {
   }
 
   Future<void> _pickDate() async {
+    final isWeekly = widget.isRepeat && widget.repeatDays.isNotEmpty;
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2024),
       lastDate: DateTime(2101),
+      selectableDayPredicate: isWeekly
+          ? (day) => widget.repeatDays.contains(day.weekday)
+          : null,
     );
 
     if (picked != null) {

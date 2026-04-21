@@ -128,4 +128,55 @@ class HomeTabViewModel {
 
     print("기분: $currentMood → $newMood / 골드: $currentGold → $newGold");
   }
+
+  Future<void> checkDailyMoodDecrease() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final today = DateTime.now();
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    final userDoc = await _db.collection('users').doc(uid).get();
+    final userData = userDoc.data()!;
+
+    final lastDecreaseDate = userData['lastMoodDecreaseDate'] as String?;
+    if (lastDecreaseDate == todayStr) return; // 오늘 이미 처리됨
+
+    // 어제 날짜 계산
+    final yesterday = today.subtract(const Duration(days: 1));
+    final yesterdayStr =
+        '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+
+    // 어제 완료한 todo 수 확인
+    final historyDoc = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('completedHistory')
+        .doc(yesterdayStr)
+        .get();
+
+    final yesterdayCount = historyDoc.exists
+        ? (historyDoc.data()!['count'] ?? 0) as int
+        : 0;
+
+    if (yesterdayCount >= 1) {
+      // 어제 todo 완료했으면 감소 없이 날짜만 업데이트
+      await _db.collection('users').doc(uid).update({
+        'lastMoodDecreaseDate': todayStr,
+      });
+      return;
+    }
+
+    // 어제 완료 0개 → 기분 -10
+    final currentMood = (userData['mood'] ?? 50) as int;
+    final newMood = (currentMood - 10).clamp(0, 100);
+
+    await _db.collection('users').doc(uid).update({
+      'mood': newMood,
+      'lastMoodDecreaseDate': todayStr,
+    });
+
+    print("기분 감소: $currentMood → $newMood (어제 완료 0개)");
+  }
 }
