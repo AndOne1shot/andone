@@ -54,15 +54,6 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
       backgroundColor: const Color(0xFF1A1A1A),
       body: Column(
         children: [
-              // 상단 액센트 라인
-              Container(
-                height: 2,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.transparent, Colors.blue, Colors.transparent],
-                  ),
-                ),
-              ),
               SafeArea(
                 bottom: false,
                 child: QuestHeader(

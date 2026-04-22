@@ -2,7 +2,6 @@
 // 퀘스트 생성/상세 페이지에서 각 입력 섹션을 감싸는 카드 컨테이너
 //
 // 구성 요소:
-// - 상단 블루 그라디언트 라인 : 섹션 카드 상단에 포인트 장식
 // - 좌측 블루 수직 바 + label 텍스트 : 섹션 이름 표시 (예: '퀘스트명', '난이도')
 // - child : 섹션 안에 들어갈 실제 입력 위젯 (텍스트필드, 슬라이더 등)
 
@@ -24,16 +23,6 @@ class QuestSectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 상단 블루 그라디언트 라인
-          Container(
-            height: 2,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.transparent, Colors.blue, Colors.transparent],
-              ),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
             child: Column(

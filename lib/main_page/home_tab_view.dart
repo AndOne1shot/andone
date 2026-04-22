@@ -78,8 +78,10 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
       if (now.isAfter(endTime)) return "종료됨";
       final diff = startTime.difference(now);
       if (diff.isNegative) return "시작됨";
-      final hours = diff.inHours;
+      final days = diff.inDays;
+      final hours = diff.inHours % 24;
       final minutes = diff.inMinutes % 60;
+      if (days > 0) return "$days일 $hours시간 전";
       if (hours > 0) return "$hours시간 ${minutes}분 전";
       return "$minutes분 전";
     }
@@ -288,7 +290,12 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                     Expanded(
                       child: todoAsync.when(
                         data: (todos) {
-                          final filtered = todos.where(shouldShowTodo).toList();
+                          final filtered = todos.where(shouldShowTodo).toList()
+                            ..sort((a, b) {
+                              final aStart = a.repeat != 0 ? effectiveTime(a.startTime) : a.startTime;
+                              final bStart = b.repeat != 0 ? effectiveTime(b.startTime) : b.startTime;
+                              return aStart.compareTo(bStart);
+                            });
                           if (filtered.isEmpty) {
                             return const Center(child: Text("오늘의 퀘스트가 없습니다!"));
                           }
@@ -365,31 +372,24 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      // 매주 반복이고 오늘이 해당 요일이 아니면 시간 숨김
-                                      if (!(todo.repeat ==
-                                              RepeatType.weekly.index &&
-                                          !todo.repeatDays.contains(
-                                            today.weekday,
-                                          ))) ...[
-                                        const Icon(
-                                          Icons.access_time,
-                                          size: 14,
-                                          color: Colors.grey,
+                                      const Icon(
+                                        Icons.access_time,
+                                        size: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Text(
+                                        getRemainingTime(
+                                          todo.repeat != 0
+                                              ? effectiveTime(todo.startTime)
+                                              : todo.startTime,
+                                          todo.repeat != 0
+                                              ? effectiveTime(todo.endTime)
+                                              : todo.endTime,
                                         ),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          getRemainingTime(
-                                            todo.repeat != 0
-                                                ? effectiveTime(todo.startTime)
-                                                : todo.startTime,
-                                            todo.repeat != 0
-                                                ? effectiveTime(todo.endTime)
-                                                : todo.endTime,
-                                          ),
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
-                                        const SizedBox(width: 8),
-                                      ],
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      const SizedBox(width: 8),
                                       IconButton(
                                         icon: Icon(
                                           completed

@@ -49,14 +49,6 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
       backgroundColor: const Color(0xFF1A1A1A),
       body: Column(
         children: [
-              Container(
-                height: 2,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.transparent, Colors.blue, Colors.transparent],
-                  ),
-                ),
-              ),
               SafeArea(
                 bottom: false,
                 child: QuestHeader(

@@ -46,10 +46,11 @@ class _ProfilePageViewState extends ConsumerState<ProfilePageView> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            const CircleAvatar(
-              radius: 48,
-              backgroundColor: Color(0xFF2D2D2D),
-              child: Icon(Icons.person, size: 48, color: Colors.white54),
+            Image.asset(
+              'assets/image/character/my_pet_right.png',
+              width: 96,
+              height: 96,
+              fit: BoxFit.contain,
             ),
             const SizedBox(height: 16),
             Text(
