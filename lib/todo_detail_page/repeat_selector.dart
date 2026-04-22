@@ -18,63 +18,54 @@ class RepeatSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const opts = [
+      {'icon': Icons.close, 'label': '없음'},
+      {'icon': Icons.wb_sunny_outlined, 'label': '매일'},
+      {'icon': Icons.calendar_month_outlined, 'label': '매주'},
+    ];
     const dayLabels = ['월', '화', '수', '목', '금', '토', '일'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '반복 설정',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
         Row(
-          children: [
-            Expanded(
-              child: RadioListTile<RepeatType>(
-                title: const Text('없음'),
-                value: RepeatType.none,
-                groupValue: value,
-                onChanged: (v) => onChanged(v!),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                visualDensity: const VisualDensity(
-                  horizontal: -4,
-                  vertical: -4,
+          children: List.generate(3, (i) {
+            final active = value.index == i;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => onChanged(RepeatType.values[i]),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: EdgeInsets.only(left: i == 0 ? 0 : 4, right: i == 2 ? 0 : 4),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: active ? Colors.blue.withOpacity(0.15) : const Color(0xFF1A1A1A),
+                    border: Border.all(
+                      color: active ? Colors.blue : Colors.white24,
+                      width: active ? 1.5 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(opts[i]['icon'] as IconData,
+                        color: active ? Colors.blue : Colors.white38, size: 22),
+                      const SizedBox(height: 6),
+                      Text(opts[i]['label'] as String,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: active ? Colors.blue : Colors.white38,
+                        )),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: RadioListTile<RepeatType>(
-                title: const Text('매일'),
-                value: RepeatType.daily,
-                groupValue: value,
-                onChanged: (v) => onChanged(v!),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                visualDensity: const VisualDensity(
-                  horizontal: -4,
-                  vertical: -4,
-                ),
-              ),
-            ),
-            Expanded(
-              child: RadioListTile<RepeatType>(
-                title: const Text('매주'),
-                value: RepeatType.weekly,
-                groupValue: value,
-                onChanged: (v) => onChanged(v!),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                visualDensity: const VisualDensity(
-                  horizontal: -4,
-                  vertical: -4,
-                ),
-              ),
-            ),
-          ],
+            );
+          }),
         ),
         if (value == RepeatType.weekly) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(7, (index) {
@@ -90,14 +81,15 @@ class RepeatSelector extends StatelessWidget {
                   }
                   onRepeatDaysChanged(updated);
                 },
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isSelected ? Colors.blue : Colors.transparent,
                     border: Border.all(
-                      color: isSelected ? Colors.blue : Colors.grey,
+                      color: isSelected ? Colors.blue : Colors.white24,
                     ),
                   ),
                   alignment: Alignment.center,
@@ -105,7 +97,7 @@ class RepeatSelector extends StatelessWidget {
                     dayLabels[index],
                     style: TextStyle(
                       fontSize: 12,
-                      color: isSelected ? Colors.white : Colors.grey,
+                      color: isSelected ? Colors.white : Colors.white54,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

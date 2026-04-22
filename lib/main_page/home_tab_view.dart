@@ -55,8 +55,27 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
       return "$hour:$minute";
     }
 
-    String getRemainingTime(DateTime startTime) {
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+
+    /// 반복 todo의 표시용 DateTime을 반환한다.
+    /// - 저장된 날짜가 미래면 → 그대로 반환
+    /// - 저장된 날짜가 오늘이거나 과거면 → 오늘 날짜 + 저장된 시간으로 교체
+    DateTime effectiveTime(DateTime stored) {
+      final storedDate = DateTime(stored.year, stored.month, stored.day);
+      if (storedDate.isAfter(todayDate)) return stored;
+      return DateTime(
+        today.year,
+        today.month,
+        today.day,
+        stored.hour,
+        stored.minute,
+      );
+    }
+
+    String getRemainingTime(DateTime startTime, DateTime endTime) {
       final now = DateTime.now();
+      if (now.isAfter(endTime)) return "종료됨";
       final diff = startTime.difference(now);
       if (diff.isNegative) return "시작됨";
       final hours = diff.inHours;
@@ -65,8 +84,6 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
       return "$minutes분 전";
     }
 
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
     final todayStr =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
@@ -175,10 +192,16 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                         child: AnimatedBuilder(
                           animation: _animController,
                           builder: (context, child) {
-                            final dy = -8 * (1 - ((_yAnim.value - 0.5).abs() * 2));
-                            final isRight = _animController.status == AnimationStatus.forward;
+                            final dy =
+                                -8 * (1 - ((_yAnim.value - 0.5).abs() * 2));
+                            final isRight =
+                                _animController.status ==
+                                AnimationStatus.forward;
                             return Align(
-                              alignment: Alignment(_xAnim.value, 0.6 + dy * 0.05),
+                              alignment: Alignment(
+                                _xAnim.value,
+                                0.6 + dy * 0.05,
+                              ),
                               child: Image.asset(
                                 isRight
                                     ? 'assets/image/character/my_pet_right.png'
@@ -241,7 +264,7 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
             Expanded(
               flex: 6,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -342,17 +365,31 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(
-                                        Icons.access_time,
-                                        size: 14,
-                                        color: Colors.grey,
-                                      ),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        getRemainingTime(todo.startTime),
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                      const SizedBox(width: 8),
+                                      // 매주 반복이고 오늘이 해당 요일이 아니면 시간 숨김
+                                      if (!(todo.repeat ==
+                                              RepeatType.weekly.index &&
+                                          !todo.repeatDays.contains(
+                                            today.weekday,
+                                          ))) ...[
+                                        const Icon(
+                                          Icons.access_time,
+                                          size: 14,
+                                          color: Colors.grey,
+                                        ),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          getRemainingTime(
+                                            todo.repeat != 0
+                                                ? effectiveTime(todo.startTime)
+                                                : todo.startTime,
+                                            todo.repeat != 0
+                                                ? effectiveTime(todo.endTime)
+                                                : todo.endTime,
+                                          ),
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                        const SizedBox(width: 8),
+                                      ],
                                       IconButton(
                                         icon: Icon(
                                           completed

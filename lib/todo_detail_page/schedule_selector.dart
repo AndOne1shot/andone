@@ -28,7 +28,6 @@ class _ScheduleSelectorState extends State<ScheduleSelector> {
   @override
   void initState() {
     super.initState();
-
     _selectedDate = widget.initialStartTime;
     _startTime = TimeOfDay.fromDateTime(widget.initialStartTime);
     _endTime = TimeOfDay.fromDateTime(widget.initialEndTime);
@@ -41,113 +40,151 @@ class _ScheduleSelectorState extends State<ScheduleSelector> {
       initialDate: _selectedDate,
       firstDate: DateTime(2024),
       lastDate: DateTime(2101),
-      selectableDayPredicate: isWeekly
-          ? (day) => widget.repeatDays.contains(day.weekday)
-          : null,
+      selectableDayPredicate:
+          isWeekly ? (day) => widget.repeatDays.contains(day.weekday) : null,
+      builder: (ctx, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: Colors.blue,
+            surface: Color(0xFF2D2D2D),
+          ),
+        ),
+        child: child!,
+      ),
     );
-
     if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-      });
+      setState(() => _selectedDate = picked);
       _notifyParent();
     }
   }
 
-  Future<void> _pickStartTime() async {
+  Future<void> _pickTime(bool isStart) async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _startTime,
+      initialTime: isStart ? _startTime : _endTime,
+      builder: (ctx, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: Colors.blue,
+            surface: Color(0xFF2D2D2D),
+          ),
+        ),
+        child: child!,
+      ),
     );
-
     if (picked != null) {
-      setState(() {
-        _startTime = picked;
-      });
-      _notifyParent();
-    }
-  }
-
-  Future<void> _pickEndTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: _endTime,
-    );
-
-    if (picked != null) {
-      setState(() {
-        _endTime = picked;
-      });
+      setState(() => isStart ? _startTime = picked : _endTime = picked);
       _notifyParent();
     }
   }
 
   void _notifyParent() {
     final start = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _startTime.hour,
-      _startTime.minute,
+      _selectedDate.year, _selectedDate.month, _selectedDate.day,
+      _startTime.hour, _startTime.minute,
     );
-
     final end = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _endTime.hour,
-      _endTime.minute,
+      _selectedDate.year, _selectedDate.month, _selectedDate.day,
+      _endTime.hour, _endTime.minute,
     );
-
     widget.onChanged(start, end);
+  }
+
+  String _fmtDate() =>
+      '${_selectedDate.year}년 ${_selectedDate.month}월 ${_selectedDate.day}일';
+
+  String _fmtTime(TimeOfDay t) {
+    final h = t.hour;
+    final m = t.minute.toString().padLeft(2, '0');
+    final period = h < 12 ? '오전' : '오후';
+    final h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$period $h12:$m';
+  }
+
+  Widget _buildDateButton() {
+    return GestureDetector(
+      onTap: _pickDate,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          border: Border.all(color: Colors.white24),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28, height: 28,
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.15),
+                border: Border.all(color: Colors.blue.withOpacity(0.4)),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Icon(Icons.calendar_today_outlined, color: Colors.blue, size: 14),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.isRepeat ? '시작일' : '날짜',
+                    style: const TextStyle(fontSize: 10, color: Colors.white38)),
+                  Text(_fmtDate(),
+                    style: const TextStyle(
+                      fontSize: 14, color: Colors.white, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white38, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeButton(String label, TimeOfDay time, bool isStart) {
+    return GestureDetector(
+      onTap: () => _pickTime(isStart),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          border: Border.all(color: Colors.white24),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.access_time, color: Colors.blue, size: 16),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 10, color: Colors.white38)),
+                Text(_fmtTime(time),
+                  style: const TextStyle(
+                    fontSize: 13, color: Colors.white, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.isRepeat ? '시작일 설정' : '일정 설정',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 175,
-            child: OutlinedButton.icon(
-              onPressed: _pickDate,
-              icon: const Icon(Icons.calendar_today_outlined, size: 18),
-              label: Text(
-                widget.isRepeat
-                    ? "시작일: ${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}"
-                    : "${_selectedDate.year}-${_selectedDate.month}-${_selectedDate.day}",
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
+        _buildDateButton(),
+        const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _pickStartTime,
-                icon: const Icon(Icons.access_time, size: 18),
-                label: Text(_startTime.format(context)),
-              ),
-            ),
+            Expanded(child: _buildTimeButton('시작 시간', _startTime, true)),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Text("~"),
+              child: Text('→', style: TextStyle(color: Colors.white38, fontSize: 16)),
             ),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _pickEndTime,
-                icon: const Icon(Icons.access_time, size: 18),
-                label: Text(_endTime.format(context)),
-              ),
-            ),
+            Expanded(child: _buildTimeButton('종료 시간', _endTime, false)),
           ],
         ),
       ],
