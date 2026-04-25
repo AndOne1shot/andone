@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 void main() async {
   // 비동기 방식으로 Firebase를 초기화
   WidgetsFlutterBinding.ensureInitialized();
+  // firebase 초기화(연결준비)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const ProviderScope(child: MyApp()));
@@ -38,6 +39,7 @@ class MyApp extends StatelessWidget {
           primary: Colors.black,
         ),
       ),
+      // snapshot.data 값에 따라 화면 전환
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {

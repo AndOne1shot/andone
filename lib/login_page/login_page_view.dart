@@ -186,6 +186,7 @@ class _LoginPageViewState extends ConsumerState<LoginPageView>
                     onPressed: isLoading
                         ? null
                         : () {
+                            // 화면을 스택 구조로 관리
                             Navigator.push(
                               context,
                               MaterialPageRoute(

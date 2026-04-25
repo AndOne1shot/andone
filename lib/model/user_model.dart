@@ -47,23 +47,23 @@ class UserModel {
     };
   }
 
-  UserModel copyWith({
-    String? nickname,
-    int? mood,
-    int? maxMood,
-    int? gold,
-    int? totalCompleted,
-    String? lastMoodDecreaseDate,
-  }) {
-    return UserModel(
-      uid: uid,
-      email: email,
-      nickname: nickname ?? this.nickname,
-      mood: mood ?? this.mood,
-      maxMood: maxMood ?? this.maxMood,
-      gold: gold ?? this.gold,
-      totalCompleted: totalCompleted ?? this.totalCompleted,
-      lastMoodDecreaseDate: lastMoodDecreaseDate ?? this.lastMoodDecreaseDate,
-    );
-  }
+  // UserModel copyWith({
+  //   String? nickname,
+  //   int? mood,
+  //   int? maxMood,
+  //   int? gold,
+  //   int? totalCompleted,
+  //   String? lastMoodDecreaseDate,
+  // }) {
+  //   return UserModel(
+  //     uid: uid,
+  //     email: email,
+  //     nickname: nickname ?? this.nickname,
+  //     mood: mood ?? this.mood,
+  //     maxMood: maxMood ?? this.maxMood,
+  //     gold: gold ?? this.gold,
+  //     totalCompleted: totalCompleted ?? this.totalCompleted,
+  //     lastMoodDecreaseDate: lastMoodDecreaseDate ?? this.lastMoodDecreaseDate,
+  //   );
+  // }
 }

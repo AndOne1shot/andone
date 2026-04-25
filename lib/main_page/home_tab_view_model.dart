@@ -29,24 +29,36 @@ class HomeTabViewModel {
   // 난이도별 골드 보상
   int _goldReward(int difficulty) {
     switch (difficulty) {
-      case 1: return 10;
-      case 2: return 15;
-      case 3: return 20;
-      case 4: return 30;
-      case 5: return 50;
-      default: return 20;
+      case 1:
+        return 10;
+      case 2:
+        return 15;
+      case 3:
+        return 20;
+      case 4:
+        return 30;
+      case 5:
+        return 50;
+      default:
+        return 20;
     }
   }
 
   // 난이도별 기분 증가량
   int _moodReward(int difficulty) {
     switch (difficulty) {
-      case 1: return 5;
-      case 2: return 8;
-      case 3: return 10;
-      case 4: return 15;
-      case 5: return 20;
-      default: return 10;
+      case 1:
+        return 5;
+      case 2:
+        return 8;
+      case 3:
+        return 10;
+      case 4:
+        return 15;
+      case 5:
+        return 20;
+      default:
+        return 10;
     }
   }
 
@@ -121,7 +133,9 @@ class HomeTabViewModel {
         .doc(todayStr);
     final historyDoc = await historyRef.get();
     if (historyDoc.exists) {
-      await historyRef.update({'count': (historyDoc.data()!['count'] ?? 0) + 1});
+      await historyRef.update({
+        'count': (historyDoc.data()!['count'] ?? 0) + 1,
+      });
     } else {
       await historyRef.set({'count': 1});
     }
@@ -129,6 +143,7 @@ class HomeTabViewModel {
     print("기분: $currentMood → $newMood / 골드: $currentGold → $newGold");
   }
 
+  // 어제 완료한 to-do가 없다면 기분 감소
   Future<void> checkDailyMoodDecrease() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;

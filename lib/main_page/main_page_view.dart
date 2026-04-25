@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class _TabIndexNotifier extends Notifier<int> {
   @override
-  int build() => 0;
+  int build() => 0; // 초기화면(HomeTabView())
 
   void setIndex(int index) => state = index;
 }
 
-final _tabIndexProvider = NotifierProvider.autoDispose<_TabIndexNotifier, int>(_TabIndexNotifier.new);
+final _tabIndexProvider = NotifierProvider.autoDispose<_TabIndexNotifier, int>(
+  _TabIndexNotifier.new,
+);
 
 class MainPageView extends ConsumerWidget {
   const MainPageView({super.key});
@@ -20,11 +22,7 @@ class MainPageView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tabIndex = ref.watch(_tabIndexProvider);
 
-    final tabs = const [
-      HomeTabView(),
-      EquipmentPageView(),
-      ProfilePageView(),
-    ];
+    final tabs = const [HomeTabView(), EquipmentPageView(), ProfilePageView()];
 
     return Scaffold(
       body: tabs[tabIndex],

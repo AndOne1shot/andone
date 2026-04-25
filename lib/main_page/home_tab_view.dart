@@ -58,12 +58,7 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
 
-    /// 반복 todo의 표시용 DateTime을 반환한다.
-    /// - 저장된 날짜가 미래면 → 그대로 반환
-    /// - 저장된 날짜가 오늘이거나 과거면 → 오늘 날짜 + 저장된 시간으로 교체
     DateTime effectiveTime(DateTime stored) {
-      final storedDate = DateTime(stored.year, stored.month, stored.day);
-      if (storedDate.isAfter(todayDate)) return stored;
       return DateTime(
         today.year,
         today.month,
@@ -73,6 +68,45 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
       );
     }
 
+    // 매주 반복 todo의 다음(또는 현재 진행 중인) 발생 시각을 반환
+    (DateTime, DateTime) weeklyEffectiveTimes(todo) {
+      final now = DateTime.now();
+      final storedStart = todo.startTime as DateTime;
+      final storedEnd = todo.endTime as DateTime;
+      final sortedDays = ([...todo.repeatDays as List<int>])..sort();
+      final todayWeekday = now.weekday; // 1=월 ~ 7=일
+
+      // 오늘이 반복 요일이고 아직 종료 전이면 오늘 날짜 사용
+      if (sortedDays.contains(todayWeekday)) {
+        final todayEnd = DateTime(now.year, now.month, now.day, storedEnd.hour, storedEnd.minute);
+        if (now.isBefore(todayEnd)) {
+          return (
+            DateTime(now.year, now.month, now.day, storedStart.hour, storedStart.minute),
+            todayEnd,
+          );
+        }
+      }
+
+      // 다음 반복 요일 탐색
+      int? nextDay;
+      for (final d in sortedDays) {
+        if (d > todayWeekday) {
+          nextDay = d;
+          break;
+        }
+      }
+      nextDay ??= sortedDays.first;
+      int daysUntil = (nextDay - todayWeekday) % 7;
+      if (daysUntil == 0) daysUntil = 7;
+
+      final nextDate = now.add(Duration(days: daysUntil));
+      return (
+        DateTime(nextDate.year, nextDate.month, nextDate.day, storedStart.hour, storedStart.minute),
+        DateTime(nextDate.year, nextDate.month, nextDate.day, storedEnd.hour, storedEnd.minute),
+      );
+    }
+
+    // 시작까지 남은 시간 계산
     String getRemainingTime(DateTime startTime, DateTime endTime) {
       final now = DateTime.now();
       if (now.isAfter(endTime)) return "종료됨";
@@ -82,10 +116,11 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
       final hours = diff.inHours % 24;
       final minutes = diff.inMinutes % 60;
       if (days > 0) return "$days일 $hours시간 전";
-      if (hours > 0) return "$hours시간 ${minutes}분 전";
+      if (hours > 0) return "$hours시간 $minutes분 전";
       return "$minutes분 전";
     }
 
+    // 오늘날짜 문자열로 변환
     final todayStr =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
@@ -100,7 +135,7 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
         todo.startTime.month,
         todo.startTime.day,
       );
-      return startDate == todayDate;
+      return !startDate.isBefore(todayDate);
     }
 
     // 반복 todo 완료 여부 판단
@@ -109,6 +144,7 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
       return todo.lastCompletedDate == todayStr;
     }
 
+    // 반복도 표시(매일 / 매주 월·수)
     String getRepeatLabel(int repeat, List<int> repeatDays) {
       const dayLabels = ['월', '화', '수', '목', '금', '토', '일'];
       if (repeat == RepeatType.daily.index) return '매일';
@@ -205,9 +241,13 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                                 0.6 + dy * 0.05,
                               ),
                               child: Image.asset(
-                                isRight
-                                    ? 'assets/image/character/my_pet_right.png'
-                                    : 'assets/image/character/my_pet_left.png',
+                                mood <= 20
+                                    ? (isRight
+                                          ? 'assets/image/character/my_pet_cry_right.png'
+                                          : 'assets/image/character/my_pet_cry_left.png')
+                                    : (isRight
+                                          ? 'assets/image/character/my_pet_right.png'
+                                          : 'assets/image/character/my_pet_left.png'),
                                 fit: BoxFit.contain,
                               ),
                             );
@@ -292,9 +332,12 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                         data: (todos) {
                           final filtered = todos.where(shouldShowTodo).toList()
                             ..sort((a, b) {
-                              final aStart = a.repeat != 0 ? effectiveTime(a.startTime) : a.startTime;
-                              final bStart = b.repeat != 0 ? effectiveTime(b.startTime) : b.startTime;
-                              return aStart.compareTo(bStart);
+                              DateTime resolveStart(t) {
+                                if (t.repeat == RepeatType.weekly.index) return weeklyEffectiveTimes(t).$1;
+                                if (t.repeat == RepeatType.daily.index) return effectiveTime(t.startTime);
+                                return t.startTime as DateTime;
+                              }
+                              return resolveStart(a).compareTo(resolveStart(b));
                             });
                           if (filtered.isEmpty) {
                             return const Center(child: Text("오늘의 퀘스트가 없습니다!"));
@@ -379,14 +422,16 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                                       ),
                                       const SizedBox(width: 2),
                                       Text(
-                                        getRemainingTime(
-                                          todo.repeat != 0
-                                              ? effectiveTime(todo.startTime)
-                                              : todo.startTime,
-                                          todo.repeat != 0
-                                              ? effectiveTime(todo.endTime)
-                                              : todo.endTime,
-                                        ),
+                                        () {
+                                          if (todo.repeat == RepeatType.weekly.index) {
+                                            final times = weeklyEffectiveTimes(todo);
+                                            return getRemainingTime(times.$1, times.$2);
+                                          }
+                                          return getRemainingTime(
+                                            todo.repeat == RepeatType.daily.index ? effectiveTime(todo.startTime) : todo.startTime,
+                                            todo.repeat == RepeatType.daily.index ? effectiveTime(todo.endTime) : todo.endTime,
+                                          );
+                                        }(),
                                         style: const TextStyle(fontSize: 12),
                                       ),
                                       const SizedBox(width: 8),
