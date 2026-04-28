@@ -1,3 +1,4 @@
+import 'package:andone/services/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +36,15 @@ class TodoDetailViewModel {
         'repeat': repeat,
         'repeatDays': repeatDays,
       });
+      // 기존 알림 취소 후 새 시간으로 재예약
+      await notificationService.cancelTodoReminder(docId);
+      await notificationService.scheduleTodoReminder(
+        docId: docId,
+        title: newTitle,
+        startTime: startTime,
+        repeat: repeat,
+        repeatDays: repeatDays,
+      );
       print("업데이트 성공!");
     } catch (e) {
       print("업데이트 실패: $e");
@@ -52,6 +62,9 @@ class TodoDetailViewModel {
           .collection('todos')
           .doc(docId)
           .delete();
+
+      // 예약된 알림 취소
+      await notificationService.cancelTodoReminder(docId);
     } catch (e) {
       print("삭제 실패: $e");
     }

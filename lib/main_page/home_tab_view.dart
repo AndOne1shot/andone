@@ -1,3 +1,4 @@
+import 'package:andone/equipment_page/equipment_page_view_model.dart';
 import 'package:andone/main_page/home_tab_view_model.dart';
 import 'package:andone/todo_create_page/todo_create_page_view.dart';
 import 'package:andone/todo_detail_page/repeat_selector.dart';
@@ -78,10 +79,22 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
 
       // 오늘이 반복 요일이고 아직 종료 전이면 오늘 날짜 사용
       if (sortedDays.contains(todayWeekday)) {
-        final todayEnd = DateTime(now.year, now.month, now.day, storedEnd.hour, storedEnd.minute);
+        final todayEnd = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          storedEnd.hour,
+          storedEnd.minute,
+        );
         if (now.isBefore(todayEnd)) {
           return (
-            DateTime(now.year, now.month, now.day, storedStart.hour, storedStart.minute),
+            DateTime(
+              now.year,
+              now.month,
+              now.day,
+              storedStart.hour,
+              storedStart.minute,
+            ),
             todayEnd,
           );
         }
@@ -101,8 +114,20 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
 
       final nextDate = now.add(Duration(days: daysUntil));
       return (
-        DateTime(nextDate.year, nextDate.month, nextDate.day, storedStart.hour, storedStart.minute),
-        DateTime(nextDate.year, nextDate.month, nextDate.day, storedEnd.hour, storedEnd.minute),
+        DateTime(
+          nextDate.year,
+          nextDate.month,
+          nextDate.day,
+          storedStart.hour,
+          storedStart.minute,
+        ),
+        DateTime(
+          nextDate.year,
+          nextDate.month,
+          nextDate.day,
+          storedEnd.hour,
+          storedEnd.minute,
+        ),
       );
     }
 
@@ -154,6 +179,13 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
       }
       return '';
     }
+
+    final itemAsync = ref.watch(itemListProvider);
+    final equippedItems = user?.equippedItems ?? {};
+    final equippedAccessoryId = equippedItems['accessory'];
+    final equippedAccessory = itemAsync.asData?.value
+        .where((i) => i.id == equippedAccessoryId)
+        .firstOrNull;
 
     final mood = user?.mood ?? 50;
     final maxMood = user?.maxMood ?? 100;
@@ -235,20 +267,39 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                             final isRight =
                                 _animController.status ==
                                 AnimationStatus.forward;
+                            final characterAsset = mood <= 20
+                                ? (isRight
+                                      ? 'assets/image/character/my_pet_cry_right.png'
+                                      : 'assets/image/character/my_pet_cry_left.png')
+                                : (isRight
+                                      ? 'assets/image/character/my_pet_right.png'
+                                      : 'assets/image/character/my_pet_left.png');
+
                             return Align(
                               alignment: Alignment(
                                 _xAnim.value,
                                 0.6 + dy * 0.05,
                               ),
-                              child: Image.asset(
-                                mood <= 20
-                                    ? (isRight
-                                          ? 'assets/image/character/my_pet_cry_right.png'
-                                          : 'assets/image/character/my_pet_cry_left.png')
-                                    : (isRight
-                                          ? 'assets/image/character/my_pet_right.png'
-                                          : 'assets/image/character/my_pet_left.png'),
-                                fit: BoxFit.contain,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Image.asset(
+                                    characterAsset,
+                                    width: 96,
+                                    height: 128,
+                                    fit: BoxFit.contain,
+                                    filterQuality: FilterQuality.none,
+                                  ),
+                                  if (equippedAccessory != null &&
+                                      equippedAccessory.assetPath.isNotEmpty)
+                                    Image.asset(
+                                      equippedAccessory.assetPath,
+                                      width: 96,
+                                      height: 128,
+                                      fit: BoxFit.contain,
+                                      filterQuality: FilterQuality.none,
+                                    ),
+                                ],
                               ),
                             );
                           },
@@ -333,10 +384,13 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                           final filtered = todos.where(shouldShowTodo).toList()
                             ..sort((a, b) {
                               DateTime resolveStart(t) {
-                                if (t.repeat == RepeatType.weekly.index) return weeklyEffectiveTimes(t).$1;
-                                if (t.repeat == RepeatType.daily.index) return effectiveTime(t.startTime);
+                                if (t.repeat == RepeatType.weekly.index)
+                                  return weeklyEffectiveTimes(t).$1;
+                                if (t.repeat == RepeatType.daily.index)
+                                  return effectiveTime(t.startTime);
                                 return t.startTime as DateTime;
                               }
+
                               return resolveStart(a).compareTo(resolveStart(b));
                             });
                           if (filtered.isEmpty) {
@@ -423,13 +477,25 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                                       const SizedBox(width: 2),
                                       Text(
                                         () {
-                                          if (todo.repeat == RepeatType.weekly.index) {
-                                            final times = weeklyEffectiveTimes(todo);
-                                            return getRemainingTime(times.$1, times.$2);
+                                          if (todo.repeat ==
+                                              RepeatType.weekly.index) {
+                                            final times = weeklyEffectiveTimes(
+                                              todo,
+                                            );
+                                            return getRemainingTime(
+                                              times.$1,
+                                              times.$2,
+                                            );
                                           }
                                           return getRemainingTime(
-                                            todo.repeat == RepeatType.daily.index ? effectiveTime(todo.startTime) : todo.startTime,
-                                            todo.repeat == RepeatType.daily.index ? effectiveTime(todo.endTime) : todo.endTime,
+                                            todo.repeat ==
+                                                    RepeatType.daily.index
+                                                ? effectiveTime(todo.startTime)
+                                                : todo.startTime,
+                                            todo.repeat ==
+                                                    RepeatType.daily.index
+                                                ? effectiveTime(todo.endTime)
+                                                : todo.endTime,
                                           );
                                         }(),
                                         style: const TextStyle(fontSize: 12),

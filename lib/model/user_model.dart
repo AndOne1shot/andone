@@ -9,6 +9,8 @@ class UserModel {
   final int gold;
   final int totalCompleted;
   final String? lastMoodDecreaseDate;
+  final List<String> ownedItems;
+  final Map<String, String> equippedItems; // { "accessory": itemId, "background": itemId }
 
   UserModel({
     required this.uid,
@@ -19,6 +21,8 @@ class UserModel {
     required this.gold,
     required this.totalCompleted,
     this.lastMoodDecreaseDate,
+    this.ownedItems = const [],
+    this.equippedItems = const {},
   });
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -32,6 +36,8 @@ class UserModel {
       gold: data['gold'] ?? 0,
       totalCompleted: data['totalCompleted'] ?? 0,
       lastMoodDecreaseDate: data['lastMoodDecreaseDate'],
+      ownedItems: List<String>.from(data['ownedItems'] ?? []),
+      equippedItems: Map<String, String>.from(data['equippedItems'] ?? {}),
     );
   }
 

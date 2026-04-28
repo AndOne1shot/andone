@@ -1,3 +1,4 @@
+import 'package:andone/services/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +23,7 @@ class TodoCreatePageViewModel {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) return;
-      await _db.collection('users').doc(uid).collection('todos').add({
+      final docRef = await _db.collection('users').doc(uid).collection('todos').add({
         'title': title,
         'content': content,
         'difficulty': difficulty,
@@ -33,6 +34,15 @@ class TodoCreatePageViewModel {
         'repeatDays': repeatDays,
         'lastCompletedDate': null,
       });
+
+      // 30분 전 알림 예약
+      await notificationService.scheduleTodoReminder(
+        docId: docRef.id,
+        title: title,
+        startTime: startTime,
+        repeat: repeat,
+        repeatDays: repeatDays,
+      );
     } catch (e) {
       print("Todo 생성 실패: $e");
     }

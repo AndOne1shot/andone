@@ -6,12 +6,14 @@ import 'main_page/main_page_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'firebase_options.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   // 비동기 방식으로 Firebase를 초기화
   WidgetsFlutterBinding.ensureInitialized();
   // firebase 초기화(연결준비)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await notificationService.init();
 
   runApp(const ProviderScope(child: MyApp()));
 }
