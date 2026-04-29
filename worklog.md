@@ -2,6 +2,49 @@
 
 <!-- Claude가 세션 종료 시 자동으로 기록합니다 -->
 
+## 2026-04-29
+
+### 포트폴리오 README 작성
+
+- `README.md` 전면 개편
+  - 기획 배경 섹션 추가 ("Todo 미완료 문제 → 다마고치 동기부여")
+  - 스크린샷 섹션 추가 (home, todo_detail_1/2, profile_1/2)
+  - 기술적 구현 포인트 섹션 추가 (반복 Todo 시간 계산, 기분 수치 시스템, 로컬 알림, 라우팅 보호)
+  - Firestore 구조 업데이트 (`lastMoodDecreaseDate`, `ownedItems`, `equippedItems`, `items/` 컬렉션 추가)
+  - 프로젝트 구조 업데이트 (`item_model.dart`, `monster_model.dart`, `home_tab_view_model.dart` 반영)
+  - 기술 스택에 Flutter 버전(3.35.4 / Dart 3.9.2), `flutter_local_notifications` 추가
+  - 로드맵 업데이트 (완료 항목 체크, 꾸미기 시스템/기분 감소 완료 처리)
+  - 설치 섹션을 GitHub Releases APK 배포 방식으로 변경
+
+### 로컬 알림 버그 수정
+
+**1. 타임존 버그 수정**
+- `tz.UTC` → `tz.local` 로 변경
+- `flutter_timezone: ^3.0.0` 패키지 추가
+- `init()` 에서 기기 로컬 타임존 감지 후 `tz.setLocalLocation()` 설정
+
+**2. 정확한 알람 권한 개선**
+- `USE_EXACT_ALARM` 제거 → `SCHEDULE_EXACT_ALARM` 만 사용 (일반 앱 기준)
+- `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` 권한 추가
+- `canScheduleExactNotifications()` 체크 후 미허용 시 설정 화면 이동
+
+**3. 삼성 갤럭시 배터리 최적화 대응**
+- `AndroidScheduleMode.exactAllowWhileIdle` → `AndroidScheduleMode.alarmClock` 으로 변경
+- `MainActivity.kt` 에 MethodChannel 추가 — 배터리 최적화 해제 설정 화면 직접 이동
+- `notification_service.dart` 에 `_requestIgnoreBatteryOptimizations()` 추가
+
+**4. ProGuard 설정 추가 (핵심 수정)**
+- release APK에서 R8이 `flutter_local_notifications` 클래스를 제거하여 알림이 동작하지 않던 문제 해결
+- `android/app/proguard-rules.pro` 생성 (`com.dexterous.**`, Gson 관련 keep 규칙)
+- `build.gradle.kts` release 빌드에 `isMinifyEnabled = true` + proguard 파일 적용
+
+### APK 빌드 및 배포
+
+- GitHub Releases 배포용 release APK 빌드 완료
+- `build/app/outputs/flutter-apk/app-release.apk`
+
+---
+
 ## 2026-04-28
 
 ### 꾸미기 시스템 - 악세서리 표시 개선

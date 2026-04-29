@@ -1,4 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -14,18 +16,41 @@ class NotificationService {
     if (_initialized) return;
 
     tz.initializeTimeZones();
+    final localTimeZone = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(localTimeZone));
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
     await _plugin.initialize(initSettings);
 
-    // Android 13+ 알림 권한 요청
-    await _plugin
+    final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    // Android 13+ 알림 권한 요청
+    await androidPlugin?.requestNotificationsPermission();
+
+    // Android 12+ 정확한 알람 권한 요청 (설정 화면으로 이동)
+    final canSchedule = await androidPlugin?.canScheduleExactNotifications() ?? false;
+    if (!canSchedule) {
+      await androidPlugin?.requestExactAlarmsPermission();
+    }
+
+    // 배터리 최적화 해제 요청 (삼성 등 제조사 대응)
+    await _requestIgnoreBatteryOptimizations();
 
     _initialized = true;
+  }
+
+  // 배터리 최적화 해제 요청 (네이티브 채널)
+  static const _batteryChannel = MethodChannel('com.jjy.andone/battery');
+
+  Future<void> _requestIgnoreBatteryOptimizations() async {
+    try {
+      await _batteryChannel.invokeMethod('requestIgnoreBatteryOptimizations');
+    } catch (_) {
+      // 지원하지 않는 기기 무시
+    }
   }
 
   // 알림 상세 설정
@@ -93,9 +118,9 @@ class NotificationService {
         baseId,
         '📌 할 일 시작 30분 전!',
         title,
-        tz.TZDateTime.from(notifyTime, tz.UTC),
+        tz.TZDateTime.from(notifyTime, tz.local),
         _notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: docId,
@@ -115,9 +140,9 @@ class NotificationService {
         baseId,
         '📌 할 일 시작 30분 전!',
         title,
-        tz.TZDateTime.from(notifyTime, tz.UTC),
+        tz.TZDateTime.from(notifyTime, tz.local),
         _notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time, // 매일 반복
@@ -133,9 +158,9 @@ class NotificationService {
           baseId + day, // 요일마다 다른 ID
           '📌 할 일 시작 30분 전!',
           title,
-          tz.TZDateTime.from(notifyTime, tz.UTC),
+          tz.TZDateTime.from(notifyTime, tz.local),
           _notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.alarmClock,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime, // 매주 반복
