@@ -7,6 +7,7 @@ import 'package:andone/common/repeat_selector.dart';
 import 'package:andone/common/quest_section_card.dart';
 import 'package:andone/common/quest_text_field.dart';
 import 'package:andone/common/quest_header.dart';
+import 'package:andone/common/discard_dialog.dart';
 
 class TodoCreatePageView extends ConsumerStatefulWidget {
   const TodoCreatePageView({super.key});
@@ -41,11 +42,32 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
     super.dispose();
   }
 
+  bool _hasChanges() {
+    return _titleController.text.isNotEmpty ||
+        _contentController.text.isNotEmpty ||
+        _difficulty != 1 ||
+        _repeat != RepeatType.none;
+  }
+
+  Future<void> _maybePop() async {
+    if (!_hasChanges()) {
+      if (context.mounted) Navigator.pop(context);
+      return;
+    }
+    final discard = await showDiscardDialog(context);
+    if (discard == true && context.mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.read(todoCreatePageViewModelProvider);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _maybePop();
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFF1A1A1A),
       body: Column(
         children: [
@@ -54,7 +76,7 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
                 child: QuestHeader(
                   title: '퀘스트 생성',
                   badge: 'NEW',
-                  onBack: () => Navigator.pop(context),
+                  onBack: _maybePop,
                 ),
               ),
               Expanded(
@@ -140,7 +162,7 @@ class _TodoCreatePageViewState extends ConsumerState<TodoCreatePageView> {
               _buildBottomBar(viewModel),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildBottomBar(dynamic viewModel) {

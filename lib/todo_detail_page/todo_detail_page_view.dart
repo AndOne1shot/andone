@@ -1,5 +1,6 @@
 import 'package:andone/model/todo_model.dart';
 import 'package:andone/todo_detail_page/todo_detail_page_view_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:andone/common/difficulty_slider.dart';
@@ -8,6 +9,7 @@ import 'package:andone/common/repeat_selector.dart';
 import 'package:andone/common/quest_section_card.dart';
 import 'package:andone/common/quest_text_field.dart';
 import 'package:andone/common/quest_header.dart';
+import 'package:andone/common/discard_dialog.dart';
 
 class TodoDetailPageView extends ConsumerStatefulWidget {
   final TodoModel todo;
@@ -46,11 +48,35 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
     super.dispose();
   }
 
+  bool _hasChanges() {
+    return _titleController.text != widget.todo.title ||
+        _contentController.text != widget.todo.content ||
+        _difficulty.round() != widget.todo.difficulty ||
+        _startDateTime != widget.todo.startTime ||
+        _endDateTime != widget.todo.endTime ||
+        _repeat.index != widget.todo.repeat ||
+        !listEquals(_repeatDays, widget.todo.repeatDays);
+  }
+
+  Future<void> _maybePop() async {
+    if (!_hasChanges()) {
+      if (context.mounted) Navigator.pop(context);
+      return;
+    }
+    final discard = await showDiscardDialog(context);
+    if (discard == true && context.mounted) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = ref.read(todoDetailPageViewModelProvider);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _maybePop();
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFF1A1A1A),
       body: Column(
         children: [
@@ -59,7 +85,7 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
                 child: QuestHeader(
                   title: '퀘스트 상세',
                   badge: 'ACTIVE',
-                  onBack: () => Navigator.pop(context),
+                  onBack: _maybePop,
                 ),
               ),
               Expanded(
@@ -145,7 +171,7 @@ class _TodoDetailPageViewState extends ConsumerState<TodoDetailPageView> {
               _buildBottomBar(viewModel),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildBottomBar(dynamic viewModel) {

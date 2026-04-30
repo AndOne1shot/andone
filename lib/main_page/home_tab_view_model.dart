@@ -1,3 +1,4 @@
+import 'package:andone/common/repeat_selector.dart';
 import 'package:andone/model/todo_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,7 +27,109 @@ final homeTabViewModelProvider = Provider((ref) => HomeTabViewModel());
 class HomeTabViewModel {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // 난이도별 골드 보상
+  // ── 비즈니스 로직 ──────────────────────────────────
+
+  // 매일 반복 todo: 저장된 시간을 오늘 날짜 기준으로 교체
+  DateTime effectiveTime(DateTime stored) {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day, stored.hour, stored.minute);
+  }
+
+  // 매주 반복 todo의 다음(또는 현재 진행 중인) 발생 시각 반환
+  ({DateTime start, DateTime end}) weeklyEffectiveTimes(TodoModel todo) {
+    final now = DateTime.now();
+    final storedStart = todo.startTime;
+    final storedEnd = todo.endTime;
+    final sortedDays = ([...todo.repeatDays])..sort();
+    final todayWeekday = now.weekday;
+
+    if (sortedDays.contains(todayWeekday)) {
+      final todayEnd = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        storedEnd.hour,
+        storedEnd.minute,
+      );
+      if (now.isBefore(todayEnd)) {
+        return (
+          start: DateTime(
+            now.year,
+            now.month,
+            now.day,
+            storedStart.hour,
+            storedStart.minute,
+          ),
+          end: todayEnd,
+        );
+      }
+    }
+
+    int? nextDay;
+    for (final d in sortedDays) {
+      if (d > todayWeekday) {
+        nextDay = d;
+        break;
+      }
+    }
+    nextDay ??= sortedDays.first;
+    int daysUntil = (nextDay - todayWeekday) % 7;
+    if (daysUntil == 0) daysUntil = 7;
+
+    final nextDate = now.add(Duration(days: daysUntil));
+    return (
+      start: DateTime(
+        nextDate.year,
+        nextDate.month,
+        nextDate.day,
+        storedStart.hour,
+        storedStart.minute,
+      ),
+      end: DateTime(
+        nextDate.year,
+        nextDate.month,
+        nextDate.day,
+        storedEnd.hour,
+        storedEnd.minute,
+      ),
+    );
+  }
+
+  // 오늘 화면에 표시할 todo 여부 판단
+  bool shouldShowTodo(TodoModel todo) {
+    if (todo.repeat != 0) return true;
+    final now = DateTime.now();
+    final todayDate = DateTime(now.year, now.month, now.day);
+    final startDate = DateTime(
+      todo.startTime.year,
+      todo.startTime.month,
+      todo.startTime.day,
+    );
+    return !startDate.isBefore(todayDate);
+  }
+
+  // 반복 todo 오늘 완료 여부 판단
+  bool isCompletedToday(TodoModel todo) {
+    if (todo.repeat == 0) return todo.isCompleted;
+    final now = DateTime.now();
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    return todo.lastCompletedDate == todayStr;
+  }
+
+  // todo 정렬 기준 시각 반환
+  DateTime resolveStart(TodoModel todo) {
+    if (todo.repeat == RepeatType.weekly.index) {
+      return weeklyEffectiveTimes(todo).start;
+    }
+    if (todo.repeat == RepeatType.daily.index) {
+      return effectiveTime(todo.startTime);
+    }
+    return todo.startTime;
+  }
+
+  // ── 골드/기분 보상 ──────────────────────────────────
+
   int _goldReward(int difficulty) {
     switch (difficulty) {
       case 1:
@@ -44,7 +147,6 @@ class HomeTabViewModel {
     }
   }
 
-  // 난이도별 기분 증가량
   int _moodReward(int difficulty) {
     switch (difficulty) {
       case 1:
@@ -73,7 +175,6 @@ class HomeTabViewModel {
 
     try {
       if (repeat == 0) {
-        // 일반 todo: isCompleted 토글
         final newStatus = !currentStatus;
         await _db
             .collection('users')
@@ -81,12 +182,8 @@ class HomeTabViewModel {
             .collection('todos')
             .doc(docId)
             .update({'isCompleted': newStatus});
-
-        if (newStatus) {
-          await _handleTodoCompleted(uid, difficulty);
-        }
+        if (newStatus) await _handleTodoCompleted(uid, difficulty);
       } else {
-        // 반복 todo: lastCompletedDate를 오늘 날짜로 업데이트
         final today = DateTime.now();
         final todayStr =
             '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
@@ -96,7 +193,6 @@ class HomeTabViewModel {
             .collection('todos')
             .doc(docId)
             .update({'lastCompletedDate': todayStr});
-
         await _handleTodoCompleted(uid, difficulty);
       }
     } catch (e) {
@@ -122,7 +218,6 @@ class HomeTabViewModel {
       'totalCompleted': totalCompleted + 1,
     });
 
-    // 날짜별 완료 기록 저장
     final today = DateTime.now();
     final todayStr =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
@@ -156,14 +251,12 @@ class HomeTabViewModel {
     final userData = userDoc.data()!;
 
     final lastDecreaseDate = userData['lastMoodDecreaseDate'] as String?;
-    if (lastDecreaseDate == todayStr) return; // 오늘 이미 처리됨
+    if (lastDecreaseDate == todayStr) return;
 
-    // 어제 날짜 계산
     final yesterday = today.subtract(const Duration(days: 1));
     final yesterdayStr =
         '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
 
-    // 어제 완료한 todo 수 확인
     final historyDoc = await _db
         .collection('users')
         .doc(uid)
@@ -176,14 +269,12 @@ class HomeTabViewModel {
         : 0;
 
     if (yesterdayCount >= 1) {
-      // 어제 todo 완료했으면 감소 없이 날짜만 업데이트
       await _db.collection('users').doc(uid).update({
         'lastMoodDecreaseDate': todayStr,
       });
       return;
     }
 
-    // 어제 완료 0개 → 기분 -10
     final currentMood = (userData['mood'] ?? 50) as int;
     final newMood = (currentMood - 10).clamp(0, 100);
 

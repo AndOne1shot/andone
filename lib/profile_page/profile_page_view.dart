@@ -1,3 +1,4 @@
+import 'package:andone/equipment_page/equipment_page_view_model.dart';
 import 'package:andone/profile_page/profile_page_view_model.dart';
 import 'package:andone/providers/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,11 @@ class _ProfilePageViewState extends ConsumerState<ProfilePageView> {
     final userAsync = ref.watch(userProvider);
     final user = userAsync.value;
     final historyAsync = ref.watch(completedHistoryProvider(_currentMonth));
+    final itemAsync = ref.watch(itemListProvider);
+    final equippedAccessoryId = user?.equippedItems['accessory'];
+    final equippedAccessory = itemAsync.asData?.value
+        .where((i) => i.id == equippedAccessoryId)
+        .firstOrNull;
 
     final now = DateTime.now();
     final todayStr =
@@ -46,11 +52,26 @@ class _ProfilePageViewState extends ConsumerState<ProfilePageView> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            Image.asset(
-              'assets/image/character/my_pet_right.png',
-              width: 96,
-              height: 96,
-              fit: BoxFit.contain,
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Image.asset(
+                  'assets/image/character/my_pet_right.png',
+                  width: 72,
+                  height: 96,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.none,
+                ),
+                if (equippedAccessory != null &&
+                    equippedAccessory.assetPath.isNotEmpty)
+                  Image.asset(
+                    equippedAccessory.assetPath,
+                    width: 72,
+                    height: 96,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.none,
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
             Text(
