@@ -1,7 +1,10 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:andone/equipment_page/equipment_page_view_model.dart';
 import 'package:andone/main_page/home_tab_view_model.dart';
 import 'package:andone/todo_create_page/todo_create_page_view.dart';
-import 'package:andone/todo_detail_page/repeat_selector.dart';
+import 'package:andone/common/repeat_selector.dart';
 import 'package:andone/todo_detail_page/todo_detail_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,12 +21,16 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
   late AnimationController _animController;
   late Animation<double> _xAnim;
   late Animation<double> _yAnim;
+  Timer? _timeRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeTabViewModelProvider).checkDailyMoodDecrease();
+    });
+    _timeRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) setState(() {});
     });
     _animController = AnimationController(
       vsync: this,
@@ -40,6 +47,7 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
   @override
   void dispose() {
     _animController.dispose();
+    _timeRefreshTimer?.cancel();
     super.dispose();
   }
 
@@ -263,7 +271,7 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                           animation: _animController,
                           builder: (context, child) {
                             final dy =
-                                -8 * (1 - ((_yAnim.value - 0.5).abs() * 2));
+                                math.sin(_animController.value * math.pi) * 8;
                             final isRight =
                                 _animController.status ==
                                 AnimationStatus.forward;
@@ -285,8 +293,8 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                                 children: [
                                   Image.asset(
                                     characterAsset,
-                                    width: 96,
-                                    height: 128,
+                                    width: 72,
+                                    height: 96,
                                     fit: BoxFit.contain,
                                     filterQuality: FilterQuality.none,
                                   ),
@@ -294,8 +302,8 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                                       equippedAccessory.assetPath.isNotEmpty)
                                     Image.asset(
                                       equippedAccessory.assetPath,
-                                      width: 96,
-                                      height: 128,
+                                      width: 72,
+                                      height: 96,
                                       fit: BoxFit.contain,
                                       filterQuality: FilterQuality.none,
                                     ),
@@ -384,10 +392,12 @@ class _HomeTabViewState extends ConsumerState<HomeTabView>
                           final filtered = todos.where(shouldShowTodo).toList()
                             ..sort((a, b) {
                               DateTime resolveStart(t) {
-                                if (t.repeat == RepeatType.weekly.index)
+                                if (t.repeat == RepeatType.weekly.index) {
                                   return weeklyEffectiveTimes(t).$1;
-                                if (t.repeat == RepeatType.daily.index)
+                                }
+                                if (t.repeat == RepeatType.daily.index) {
                                   return effectiveTime(t.startTime);
+                                }
                                 return t.startTime as DateTime;
                               }
 

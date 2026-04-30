@@ -1,3 +1,14 @@
+// Todo 반복 설정 위젯. 없음 / 매일 / 매주 중 선택하며,
+// 매주 선택 시 요일 선택 UI가 추가로 표시됨.
+// RepeatType enum도 이 파일에서 export되므로 반복 관련 로직에서 함께 import해서 사용.
+//
+// 사용법:
+//   RepeatSelector(
+//     value: _repeatType,                           // RepeatType
+//     onChanged: (type) => setState(() => _repeatType = type),
+//     repeatDays: _repeatDays,                      // List<int>, 1=월~7=일
+//     onRepeatDaysChanged: (days) => setState(() => _repeatDays = days),
+//   )
 import 'package:flutter/material.dart';
 
 enum RepeatType { none, daily, weekly }

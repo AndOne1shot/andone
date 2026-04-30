@@ -1,3 +1,16 @@
+// Todo 날짜 및 시간 범위를 선택하는 위젯.
+// 날짜 선택은 DatePicker, 시간 선택은 드럼롤 방식(showDrumRollTimePicker)을 사용.
+// 반복 설정 시 isRepeat=true, repeatDays를 전달하면 날짜 피커에서 해당 요일만 선택 가능.
+//
+// 사용법:
+//   ScheduleSelector(
+//     initialStartTime: _startTime,    // DateTime
+//     initialEndTime: _endTime,        // DateTime
+//     onChanged: (start, end) => setState(() { _startTime = start; _endTime = end; }),
+//     isRepeat: true,                  // 반복 todo 여부 (선택)
+//     repeatDays: _repeatDays,         // 반복 요일 List<int> (선택)
+//   )
+import 'package:andone/common/drum_roll_time_picker.dart';
 import 'package:flutter/material.dart';
 
 class ScheduleSelector extends StatefulWidget {
@@ -59,18 +72,9 @@ class _ScheduleSelectorState extends State<ScheduleSelector> {
   }
 
   Future<void> _pickTime(bool isStart) async {
-    final picked = await showTimePicker(
+    final picked = await showDrumRollTimePicker(
       context: context,
       initialTime: isStart ? _startTime : _endTime,
-      builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Colors.blue,
-            surface: Color(0xFF2D2D2D),
-          ),
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) {
       setState(() => isStart ? _startTime = picked : _endTime = picked);

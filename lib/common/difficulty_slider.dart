@@ -1,3 +1,11 @@
+// Todo 난이도를 1~5 슬라이더로 선택하는 위젯.
+// 난이도에 따라 색상(초록→빨강)과 별점, 텍스트 레이블이 변경됨.
+//
+// 사용법:
+//   DifficultySlider(
+//     difficulty: _difficulty,       // double, 1.0~5.0
+//     onChanged: (val) => setState(() => _difficulty = val),
+//   )
 import 'package:flutter/material.dart';
 
 class DifficultySlider extends StatelessWidget {

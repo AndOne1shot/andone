@@ -1,3 +1,4 @@
+import 'package:andone/common/main_loading_view.dart' show MainWithLoading;
 import 'package:andone/login_page/login_page_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +47,7 @@ class MyApp extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.data != null) {
-            return const MainPageView();
+            return const MainWithLoading();
           }
           return LoginPageView();
         },

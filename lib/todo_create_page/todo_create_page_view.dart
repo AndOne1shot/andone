@@ -1,9 +1,9 @@
 import 'package:andone/todo_create_page/todo_create_page_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:andone/todo_detail_page/difficulty_slider.dart';
-import 'package:andone/todo_detail_page/schedule_selector.dart';
-import 'package:andone/todo_detail_page/repeat_selector.dart';
+import 'package:andone/common/difficulty_slider.dart';
+import 'package:andone/common/schedule_selector.dart';
+import 'package:andone/common/repeat_selector.dart';
 import 'package:andone/common/quest_section_card.dart';
 import 'package:andone/common/quest_text_field.dart';
 import 'package:andone/common/quest_header.dart';

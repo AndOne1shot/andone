@@ -79,77 +79,77 @@ class _ProfilePageViewState extends ConsumerState<ProfilePageView> {
             ),
             const SizedBox(height: 16),
 
-            // 퀘스트 달성 진행도
-            _card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '⚔️ 퀘스트 달성',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Builder(
-                    builder: (_) {
-                      final total = user?.totalCompleted ?? 0;
-                      const milestones = [10, 20, 50, 100, 200, 500];
-                      final nextMilestone = milestones.firstWhere(
-                        (m) => m > total,
-                        orElse: () => ((total ~/ 100) + 1) * 100,
-                      );
-                      final prevMilestone = milestones.lastWhere(
-                        (m) => m <= total,
-                        orElse: () => 0,
-                      );
-                      final progress =
-                          (total - prevMilestone) /
-                          (nextMilestone - prevMilestone);
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '총 $total개 완료',
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              Text(
-                                '목표 $nextMilestone개',
-                                style: const TextStyle(
-                                  color: Colors.white38,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: progress.clamp(0.0, 1.0),
-                              minHeight: 8,
-                              backgroundColor: Colors.grey[700],
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                Colors.greenAccent,
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
+            // // 퀘스트 달성 진행도
+            // _card(
+            //   child: Column(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       const Text(
+            //         '⚔️ 퀘스트 달성',
+            //         style: TextStyle(
+            //           color: Colors.white,
+            //           fontSize: 14,
+            //           fontWeight: FontWeight.bold,
+            //         ),
+            //       ),
+            //       const SizedBox(height: 12),
+            //       Builder(
+            //         builder: (_) {
+            //           final total = user?.totalCompleted ?? 0;
+            //           const milestones = [10, 20, 50, 100, 200, 500];
+            //           final nextMilestone = milestones.firstWhere(
+            //             (m) => m > total,
+            //             orElse: () => ((total ~/ 100) + 1) * 100,
+            //           );
+            //           final prevMilestone = milestones.lastWhere(
+            //             (m) => m <= total,
+            //             orElse: () => 0,
+            //           );
+            //           final progress =
+            //               (total - prevMilestone) /
+            //               (nextMilestone - prevMilestone);
+            //           return Column(
+            //             crossAxisAlignment: CrossAxisAlignment.start,
+            //             children: [
+            //               Row(
+            //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //                 children: [
+            //                   Text(
+            //                     '총 $total개 완료',
+            //                     style: const TextStyle(
+            //                       color: Colors.white70,
+            //                       fontSize: 13,
+            //                     ),
+            //                   ),
+            //                   Text(
+            //                     '목표 $nextMilestone개',
+            //                     style: const TextStyle(
+            //                       color: Colors.white38,
+            //                       fontSize: 12,
+            //                     ),
+            //                   ),
+            //                 ],
+            //               ),
+            //               const SizedBox(height: 8),
+            //               ClipRRect(
+            //                 borderRadius: BorderRadius.circular(4),
+            //                 child: LinearProgressIndicator(
+            //                   value: progress.clamp(0.0, 1.0),
+            //                   minHeight: 8,
+            //                   backgroundColor: Colors.grey[700],
+            //                   valueColor: const AlwaysStoppedAnimation<Color>(
+            //                     Colors.greenAccent,
+            //                   ),
+            //                 ),
+            //               ),
+            //             ],
+            //           );
+            //         },
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            // const SizedBox(height: 16),
 
             // 활동 기록
             historyAsync.when(
